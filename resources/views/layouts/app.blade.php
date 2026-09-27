@@ -553,16 +553,20 @@
 
         <nav class="nav flex-column">
 
-            <a
-                href="#"
-                class="nav-link"
-            >
+            @can('user.view')
 
-                <i class="bi bi-person-gear"></i>
+                <a
+                    href="{{ route('users.index') }}"
+                    class="nav-link"
+                >
 
-                Users & Roles
+                    <i class="bi bi-person-gear"></i>
 
-            </a>
+                    Users & Roles
+
+                </a>
+
+            @endcan
 
 
             <a

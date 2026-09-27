@@ -108,13 +108,157 @@
 
             </div>
 
-            <div class="mt-3">
-                {{ $positions->links() }}
+          <div class="position-pagination-wrapper">
+
+                {{-- Information --}}
+                <div class="text-muted small">
+                    Showing
+                    <strong>{{ $positions->firstItem() ?? 0 }}</strong>
+                    to
+                    <strong>{{ $positions->lastItem() ?? 0 }}</strong>
+                    of
+                    <strong>{{ $positions->total() }}</strong>
+                    positions
+                </div>
+
+                {{-- Pagination --}}
+                @if($positions->hasPages())
+                    <nav aria-label="Positions pagination">
+                        <ul class="pagination position-pagination mb-0">
+
+                            {{-- Previous --}}
+                            @if($positions->onFirstPage())
+                                <li class="page-item disabled">
+                                    <span class="page-link">‹</span>
+                                </li>
+                            @else
+                                <li class="page-item">
+                                    <a class="page-link"
+                                    href="{{ $positions->previousPageUrl() }}"
+                                    aria-label="Previous">
+                                        ‹
+                                    </a>
+                                </li>
+                            @endif
+
+
+                            {{-- Page Numbers --}}
+                            @for($page = 1; $page <= $positions->lastPage(); $page++)
+
+                                @if($page == $positions->currentPage())
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            {{ $page }}
+                                        </span>
+                                    </li>
+
+                                @else
+
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                        href="{{ $positions->url($page) }}">
+                                            {{ $page }}
+                                        </a>
+                                    </li>
+
+                                @endif
+
+                            @endfor
+
+
+                            {{-- Next --}}
+                            @if($positions->hasMorePages())
+                                <li class="page-item">
+                                    <a class="page-link"
+                                    href="{{ $positions->nextPageUrl() }}"
+                                    aria-label="Next">
+                                        ›
+                                    </a>
+                                </li>
+                            @else
+                                <li class="page-item disabled">
+                                    <span class="page-link">›</span>
+                                </li>
+                            @endif
+
+                        </ul>
+                    </nav>
+                @endif
+
             </div>
 
-        </div>
+          </div>
     </div>
 
 </div>
 
 @endsection
+
+<style>
+    .position-pagination-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .position-pagination {
+        display: flex;
+        align-items: center;
+        gap: 0;
+    }
+
+    .position-pagination .page-link {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        font-size: 14px;
+        border: 1px solid #dee2e6;
+        color: #0d6efd;
+        background-color: #fff;
+    }
+
+    .position-pagination .page-item:first-child .page-link {
+        border-radius: 6px 0 0 6px;
+    }
+
+    .position-pagination .page-item:last-child .page-link {
+        border-radius: 0 6px 6px 0;
+    }
+
+    .position-pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+
+    .position-pagination .page-item.disabled .page-link {
+        color: #adb5bd;
+        background-color: #f8f9fa;
+        pointer-events: none;
+    }
+
+    .position-pagination .page-link:hover {
+        background-color: #f1f5f9;
+        color: #0d6efd;
+    }
+
+    .position-pagination .page-item.active .page-link:hover {
+        background-color: #0d6efd;
+        color: #fff;
+    }
+
+    @media (max-width: 576px) {
+        .position-pagination-wrapper {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+    }
+</style>
+

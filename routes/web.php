@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\HR\EmployeeController;
 use App\Http\Controllers\Master\DivisionController;
 use App\Http\Controllers\Master\PositionController;
@@ -38,6 +39,8 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/password/change', [AuthController::class, 'changePassword'])
         ->name('password.change.update');
+
+    
 });
 
 
@@ -61,4 +64,7 @@ Route::middleware(['auth', 'force.password.change'])->group(function () {
 
     // HR
     Route::resource('employees', EmployeeController::class);
+
+    // User Management
+    Route::resource('users', UserController::class);
 });
