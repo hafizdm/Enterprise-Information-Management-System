@@ -273,7 +273,7 @@
 
                         <i class="bi bi-person-circle me-1"></i>
 
-                        Admin
+                        {{ auth()->user()->username }}
 
                     </button>
 
@@ -304,13 +304,14 @@
                         </li>
 
                         <li>
-                            <a
-                                class="dropdown-item"
-                                href="#"
-                            >
-                                <i class="bi bi-box-arrow-right me-2"></i>
-                                Logout
-                            </a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+
+                                <button type="submit" class="dropdown-item">
+                                    <i class="bi bi-box-arrow-right me-2"></i>
+                                    Logout
+                                </button>
+                            </form>
                         </li>
 
                     </ul>
@@ -391,20 +392,65 @@
                 <i class="bi bi-building"></i>
                 Project
             </a>
+        </nav>
 
+        <div class="sidebar-section">
+            HR Menu
+        </div>
 
-            <a
-                href="#"
-                class="nav-link"
-            >
+        <li class="nav-item">
+            <a class="nav-link d-flex justify-content-between align-items-center"
+            data-bs-toggle="collapse"
+            href="#hrMenu"
+            role="button"
+            aria-expanded="false"
+            aria-controls="hrMenu">
 
-                <i class="bi bi-people"></i>
+                <span>
+                    <i class="bi bi-people me-2"></i>
+                    HR
+                </span>
 
-                Employee
-
+                <i class="bi bi-chevron-down small"></i>
             </a>
 
-        </nav>
+            <div class="collapse" id="hrMenu">
+                <ul class="nav flex-column ms-4">
+
+                    @can('employee.view-any')
+                        <li class="nav-item">
+                            <a href="{{ route('employees.index') }}"
+                            class="nav-link">
+                                <i class="bi bi-person me-2"></i>
+                                Employee
+                            </a>
+                        </li>
+                    @endcan
+
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-muted">
+                            <i class="bi bi-calendar-x me-2"></i>
+                            Leave
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-muted">
+                            <i class="bi bi-calendar-check me-2"></i>
+                            Attendance
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-muted">
+                            <i class="bi bi-clock me-2"></i>
+                            Timesheet
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+        </li>
 
 
         <!-- Transaction -->
