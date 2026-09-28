@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use Illuminate\Http\Request;
+use App\Models\Employee;
 
 class ProjectController extends Controller
 {
@@ -24,7 +25,9 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        return view('master.projects.create');
+        $employees = Employee::orderBy('full_name')->get();
+
+        return view('master.projects.create', compact('employees'));
     }
 
     /**
@@ -35,6 +38,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
+            'approval_employee_id' => 'required|exists:employees,id',
         ]);
 
         Project::create($validated);
@@ -57,7 +61,9 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        return view('master.projects.edit', compact('project'));
+        $employees = Employee::orderBy('full_name')->get();
+
+        return view('master.projects.edit', compact('project', 'employees'));
     }
 
     /**
@@ -68,6 +74,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
+            'approval_employee_id' => 'required|exists:employees,id',
         ]);
 
         $project->update($validated);

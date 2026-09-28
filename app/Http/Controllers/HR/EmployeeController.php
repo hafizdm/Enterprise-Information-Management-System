@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Models\LeaveRequest;
 
 class EmployeeController extends Controller
 {
@@ -338,10 +339,27 @@ class EmployeeController extends Controller
             'user.roles',
         ]);
 
-        return view('hr.employees.show', compact('employee'));
+        $activeAnnualLeave = LeaveRequest::where(
+            'employee_id',
+            $employee->id
+        )
+            ->where('leave_type', 'annual')
+            ->whereIn('status', ['pending_manager', 'approved'])
+            ->sum('total_days');
+
+        $remainingAnnualLeave =
+            $employee->total_annual_leave - $activeAnnualLeave;
+
+        return view(
+            'hr.employees.show',
+            compact(
+                'employee',
+                'remainingAnnualLeave'
+            )
+        );
     }
 
-    public function edit(Employee $employee)
+  public function edit(Employee $employee)
     {
         Gate::authorize('update', $employee);
 
@@ -353,12 +371,25 @@ class EmployeeController extends Controller
             ->orderBy('full_name')
             ->get();
 
+        $activeAnnualLeave = LeaveRequest::where(
+            'employee_id',
+            $employee->id
+        )
+            ->where('leave_type', 'annual')
+            ->whereIn('status', ['pending_manager', 'approved'])
+            ->sum('total_days');
+
+        $remainingAnnualLeave =
+            $employee->total_annual_leave - $activeAnnualLeave;
+
         return view('hr.employees.edit', compact(
             'employee',
             'divisions',
             'positions',
             'projects',
-            'managers'
+            'managers',
+            'activeAnnualLeave',
+            'remainingAnnualLeave'
         ));
     }
 

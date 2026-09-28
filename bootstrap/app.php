@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
+use Spatie\Permission\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 
@@ -14,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
+            'role' => RoleMiddleware::class,
         ]);
         })
     ->withExceptions(function (Exceptions $exceptions): void {

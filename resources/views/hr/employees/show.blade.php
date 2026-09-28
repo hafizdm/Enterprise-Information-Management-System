@@ -231,14 +231,30 @@
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="text-muted small">Total Annual Leave</label>
-                    <div>
-                        {{ number_format($employee->total_annual_leave) }} days
+                <div class="col-md-4">
+                        <label class="text-muted small">Total Annual Leave</label>
+                        <div class="fw-semibold">
+                            {{ number_format($employee->total_annual_leave) }} days
+                        </div>
                     </div>
-                </div>
 
-            </div>
+                    <div class="col-md-4">
+                        <label class="text-muted small">Active Annual Leave</label>
+                        <div>
+                            {{ number_format(
+                                $employee->total_annual_leave - $remainingAnnualLeave
+                            ) }} days
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="text-muted small">Remaining Annual Leave</label>
+                        <div class="fw-semibold">
+                            {{ number_format($remainingAnnualLeave) }} days
+                        </div>
+                    </div>
+
+                </div>
         </div>
     </div>
 

@@ -417,21 +417,59 @@
                                class="form-control">
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">
-                            Total Annual Leave
-                        </label>
+                    <div class="col-md-4">
+                            <label class="form-label">
+                                Total Annual Leave
+                            </label>
 
-                        <input type="number"
-                               name="total_annual_leave"
-                               value="{{ old('total_annual_leave', $employee->total_annual_leave) }}"
-                               min="0"
-                               max="366"
-                               step="0.01"
-                               class="form-control">
+                            <input type="number"
+                                name="total_annual_leave"
+                                value="{{ old('total_annual_leave', $employee->total_annual_leave) }}"
+                                min="0"
+                                max="366"
+                                step="0.01"
+                                class="form-control @error('total_annual_leave') is-invalid @enderror">
+
+                            @error('total_annual_leave')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+
+                            <div class="form-text">
+                                Annual leave entitlement.
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                Active Annual Leave
+                            </label>
+
+                            <div class="form-control bg-light">
+                                {{ number_format($activeAnnualLeave) }} days
+                            </div>
+
+                            <div class="form-text">
+                                Pending Manager + Approved.
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                Remaining Annual Leave
+                            </label>
+
+                            <div class="form-control bg-light fw-semibold">
+                                {{ number_format($remainingAnnualLeave) }} days
+                            </div>
+
+                            <div class="form-text">
+                                Available annual leave balance.
+                            </div>
+                        </div>
+
                     </div>
-
-                </div>
             </div>
         </div>
 

@@ -5,97 +5,137 @@
 <div class="mb-4">
     <h4 class="mb-1">Add Project</h4>
 
-    <p class="text-muted mb-0">
-        Add new project master data
-    </p>
+
+<p class="text-muted mb-0">
+    Add new project master data
+</p>
+
+
 </div>
 
 <div class="card border-0 shadow-sm">
 
-    <div class="card-body">
 
-        <form
-            action="{{ route('projects.store') }}"
-            method="POST"
-        >
+<div class="card-body">
 
-            @csrf
+    <form
+        action="{{ route('projects.store') }}"
+        method="POST"
+    >
 
-            {{-- Project Name --}}
-            <div class="mb-3">
+        @csrf
 
-                <label for="name" class="form-label">
-                    Project Name
-                </label>
+        {{-- Project Name --}}
+        <div class="mb-3">
 
-                <input
-                    type="text"
-                    name="name"
-                    id="name"
-                    class="form-control @error('name') is-invalid @enderror"
-                    value="{{ old('name') }}"
-                    placeholder="Enter project name"
-                    required
-                >
+            <label for="name" class="form-label">
+                Project Name
+            </label>
 
-                @error('name')
-                    <div class="invalid-feedback">
-                        {{ $message }}
-                    </div>
-                @enderror
+            <input
+                type="text"
+                name="name"
+                id="name"
+                class="form-control @error('name') is-invalid @enderror"
+                value="{{ old('name') }}"
+                placeholder="Enter project name"
+                required
+            >
 
-            </div>
+            @error('name')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+            @enderror
 
-
-            {{-- Location --}}
-            <div class="mb-3">
-
-                <label for="location" class="form-label">
-                    Location
-                </label>
-
-                <input
-                    type="text"
-                    name="location"
-                    id="location"
-                    class="form-control @error('location') is-invalid @enderror"
-                    value="{{ old('location') }}"
-                    placeholder="Enter project location"
-                    required
-                >
-
-                @error('location')
-                    <div class="invalid-feedback">
-                        {{ $message }}
-                    </div>
-                @enderror
-
-            </div>
+        </div>
 
 
-            {{-- Action --}}
-            <div class="d-flex gap-2">
+        {{-- Location --}}
+        <div class="mb-3">
 
-                <button
-                    type="submit"
-                    class="btn btn-primary"
-                >
-                    <i class="bi bi-check-lg"></i>
-                    Save
-                </button>
+            <label for="location" class="form-label">
+                Location
+            </label>
 
-                <a
-                    href="{{ route('projects.index') }}"
-                    class="btn btn-secondary"
-                >
-                    Cancel
-                </a>
+            <input
+                type="text"
+                name="location"
+                id="location"
+                class="form-control @error('location') is-invalid @enderror"
+                value="{{ old('location') }}"
+                placeholder="Enter project location"
+                required
+            >
 
-            </div>
+            @error('location')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+            @enderror
 
-        </form>
+        </div>
 
-    </div>
+
+        {{-- Approval Document --}}
+        <div class="mb-3">
+
+            <label for="approval_employee_id" class="form-label">
+                Approval Document
+            </label>
+
+            <select
+                name="approval_employee_id"
+                id="approval_employee_id"
+                class="form-select @error('approval_employee_id') is-invalid @enderror"
+                required
+            >
+                <option value="">Select Employee</option>
+
+                @foreach($employees as $employee)
+                    <option
+                        value="{{ $employee->id }}"
+                        {{ old('approval_employee_id') == $employee->id ? 'selected' : '' }}
+                    >
+                        {{ $employee->full_name }}
+                    </option>
+                @endforeach
+
+            </select>
+
+            @error('approval_employee_id')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+            @enderror
+
+        </div>
+
+
+        {{-- Action --}}
+        <div class="d-flex gap-2">
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                <i class="bi bi-check-lg"></i>
+                Save
+            </button>
+
+            <a
+                href="{{ route('projects.index') }}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
 
 </div>
 
