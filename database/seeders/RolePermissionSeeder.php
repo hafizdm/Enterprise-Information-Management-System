@@ -59,8 +59,9 @@ class RolePermissionSeeder extends Seeder
             'rfp.create',
             'rfp.approve',
 
-            // Leave
+           // Leave
             'leave.view-own',
+            'leave.view-any',
             'leave.create',
             'leave.approve',
 
@@ -167,6 +168,8 @@ class RolePermissionSeeder extends Seeder
                 'employee.create',
                 'employee.update-any',
                 'employee.delete',
+
+                'leave.view-any',
 
                 'report.view',
                 'report.export',

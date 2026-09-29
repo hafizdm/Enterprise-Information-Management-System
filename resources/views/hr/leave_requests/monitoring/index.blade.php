@@ -4,168 +4,252 @@
 
 <div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <div>
-            <h1 class="h3 mb-1">Leave Monitoring</h1>
-            <p class="text-muted mb-0">
-                Monitor employee leave requests.
-            </p>
-        </div>
+{{-- PAGE HEADER --}}
+<div class="d-flex justify-content-between align-items-center mb-4">
 
+    <div>
+        <h1 class="h3 mb-1">Leave Monitoring</h1>
+
+        <p class="text-muted mb-0">
+            Monitor employee leave requests.
+        </p>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
+</div>
 
-    <div class="card">
 
-        <div class="card-body">
+{{-- SUCCESS MESSAGE --}}
+@if(session('success'))
 
-            <div class="table-responsive">
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
 
-                <table class="table table-hover align-middle">
+@endif
 
-                    <thead>
+
+{{-- LEAVE MONITORING TABLE --}}
+<div class="card">
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Employee</th>
+
+                        <th>Leave Type</th>
+
+                        <th>Date</th>
+
+                        <th>Days</th>
+
+                        <th>Reason</th>
+
+                        <th>Manager</th>
+
+                        <th>Status</th>
+
+                        <th class="text-center">
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    @forelse($leaveRequests as $leave)
+
                         <tr>
-                            <th>Employee</th>
-                            <th>Leave Type</th>
-                            <th>First Date</th>
-                            <th>Last Date</th>
-                            <th>Total Days</th>
-                            <th>Reason</th>
-                            <th>Manager</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
 
-                    <tbody>
+                            {{-- EMPLOYEE --}}
+                            <td>
 
-                        @forelse($leaveRequests as $leave)
-
-                            <tr>
-
-                                <td>
+                                <div class="fw-semibold">
                                     {{ $leave->employee?->full_name ?? '-' }}
-                                </td>
+                                </div>
 
-                                <td>
-                                    @switch($leave->leave_type)
+                                <small class="text-muted">
+                                    {{ $leave->employee?->nik ?? '-' }}
+                                </small>
 
-                                        @case('annual')
-                                            Annual Leave
-                                            @break
+                            </td>
 
-                                        @case('sick')
-                                            Sick Leave
-                                            @break
 
-                                        @case('hajj')
-                                            Hajj Leave
-                                            @break
+                            {{-- LEAVE TYPE --}}
+                            <td>
 
-                                        @case('site')
-                                            Site Leave
-                                            @break
+                                @switch($leave->leave_type)
 
-                                        @case('demobilization')
-                                            Demobilization Leave
-                                            @break
+                                    @case('annual')
+                                        Annual Leave
+                                        @break
 
-                                        @default
-                                            {{ $leave->leave_type }}
+                                    @case('sick')
+                                        Sick Leave
+                                        @break
 
-                                    @endswitch
-                                </td>
+                                    @case('hajj')
+                                        Hajj Leave
+                                        @break
 
-                                <td>
+                                    @case('site')
+                                        Site Leave
+                                        @break
+
+                                    @case('demobilization')
+                                        Demobilization Leave
+                                        @break
+
+                                    @default
+                                        {{ ucfirst($leave->leave_type) }}
+
+                                @endswitch
+
+                            </td>
+
+
+                            {{-- DATE --}}
+                            <td>
+
+                                <div>
                                     {{ $leave->first_date->format('d M Y') }}
-                                </td>
+                                </div>
 
-                                <td>
-                                    {{ $leave->last_date->format('d M Y') }}
-                                </td>
+                                <small class="text-muted">
+                                    to {{ $leave->last_date->format('d M Y') }}
+                                </small>
 
-                                <td>
-                                    {{ $leave->total_days }}
-                                </td>
+                            </td>
 
-                                <td>
-                                    {{ $leave->reason }}
-                                </td>
 
-                                <td>
-                                    {{ $leave->manager?->full_name ?? '-' }}
-                                </td>
+                            {{-- TOTAL DAYS --}}
+                            <td>
+                                {{ $leave->total_days }}
+                            </td>
 
-                                <td>
 
-                                    @if($leave->status === 'pending_manager')
+                            {{-- REASON --}}
+                            <td style="min-width: 180px; max-width: 250px;">
 
-                                        <span class="badge bg-warning text-dark">
-                                            Pending Manager
-                                        </span>
+                                <span
+                                    title="{{ $leave->reason }}"
+                                >
+                                    {{ \Illuminate\Support\Str::limit($leave->reason, 60) }}
+                                </span>
 
-                                    @elseif($leave->status === 'approved')
+                            </td>
 
-                                        <span class="badge bg-success">
-                                            Approved
-                                        </span>
 
-                                    @elseif($leave->status === 'rejected')
+                            {{-- MANAGER --}}
+                            <td>
+                                {{ $leave->manager?->full_name ?? '-' }}
+                            </td>
 
-                                        <span class="badge bg-danger">
-                                            Rejected
-                                        </span>
 
-                                    @else
+                            {{-- STATUS --}}
+                            <td>
 
-                                        <span class="badge bg-secondary">
-                                            {{ ucfirst($leave->status) }}
-                                        </span>
+                                @if($leave->status === 'pending_manager')
 
-                                    @endif
+                                    <span class="badge bg-warning text-dark">
+                                        Pending Manager
+                                    </span>
 
-                                </td>
+                                @elseif($leave->status === 'approved')
 
-                                <td>
+                                    <span class="badge bg-success">
+                                        Approved
+                                    </span>
+
+                                @elseif($leave->status === 'rejected')
+
+                                    <span class="badge bg-danger">
+                                        Rejected
+                                    </span>
+
+                                @else
+
+                                    <span class="badge bg-secondary">
+                                        {{ ucfirst($leave->status) }}
+                                    </span>
+
+                                @endif
+
+                            </td>
+
+
+                            {{-- ACTION --}}
+                            <td class="text-center">
+
+                                <div class="d-flex justify-content-center gap-1">
+
                                     <a
                                         href="{{ route('leave-monitoring.show', $leave) }}"
-                                        class="btn btn-sm btn-primary"
+                                        class="btn btn-sm btn-outline-primary"
                                     >
+                                        <i class="bi bi-eye"></i>
                                         View
                                     </a>
-                                </td>
 
-                            </tr>
 
-                        @empty
+                                    <a
+                                        href="{{ route('leave-requests.pdf', $leave) }}"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        target="_blank"
+                                    >
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                        PDF
+                                    </a>
 
-                            <tr>
-                                <td colspan="8" class="text-center text-muted py-4">
-                                    No leave requests found.
-                                </td>
-                            </tr>
+                                </div>
 
-                        @endforelse
+                            </td>
 
-                    </tbody>
+                        </tr>
 
-                </table>
+                    @empty
 
-            </div>
+                        <tr>
 
-            <div class="mt-3">
-                {{ $leaveRequests->links() }}
-            </div>
+                            <td
+                                colspan="8"
+                                class="text-center text-muted py-4"
+                            >
+                                No leave requests found.
+                            </td>
+
+                        </tr>
+
+                    @endforelse
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        {{-- PAGINATION --}}
+        <div class="mt-3">
+
+            {{ $leaveRequests->links() }}
 
         </div>
 
     </div>
+
+</div>
+
 
 </div>
 

@@ -99,20 +99,23 @@ Route::middleware('role:System Administrator')->group(function () {
     // HR
     Route::resource('employees', EmployeeController::class);
 
-    Route::get(
-        '/leave-requests',
-        [LeaveRequestController::class, 'index']
-    )->name('leave-requests.index');
+    Route::get('/leave-requests',[LeaveRequestController::class, 'index'])
+    ->name('leave-requests.index');
 
-    Route::get(
-        '/leave-requests/create',
-        [LeaveRequestController::class, 'create']
-    )->name('leave-requests.create');
+    Route::get('/leave-requests/create',[LeaveRequestController::class, 'create'])
+    ->name('leave-requests.create');
 
-    Route::post(
-        '/leave-requests',
-        [LeaveRequestController::class, 'store']
-    )->name('leave-requests.store');
+    Route::post('/leave-requests',[LeaveRequestController::class, 'store'])
+    ->name('leave-requests.store');
+
+    Route::get('/leave-requests/{leaveRequest}/pdf', [LeaveRequestController::class, 'pdf'])
+    ->name('leave-requests.pdf');
+
+    Route::get('/leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show'])
+    ->name('leave-requests.show');
+
+    Route::delete('/leave-requests/{leaveRequest}', [LeaveRequestController::class, 'destroy'])
+    ->name('leave-requests.destroy');
 
     // User Management
     Route::resource('users', UserController::class);

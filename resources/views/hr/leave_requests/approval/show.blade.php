@@ -4,170 +4,259 @@
 
 <div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+{{-- Page Header --}}
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-        <div>
-            <h1 class="h3 mb-1">Leave Request Detail</h1>
+    <div>
+        <h1 class="h3 mb-1">Leave Request Detail</h1>
 
-            <p class="text-muted mb-0">
-                Review employee leave request.
-            </p>
-        </div>
+        <p class="text-muted mb-0">
+            Review and approve employee leave request.
+        </p>
+    </div>
 
-        <div>
-            <a
-                href="{{ route('leave-approvals.index') }}"
-                class="btn btn-secondary"
-            >
-                <i class="bi bi-arrow-left"></i>
-                Back
-            </a>
+    <div class="d-flex gap-2">
+
+        <a
+            href="{{ route('leave-approvals.index') }}"
+            class="btn btn-secondary"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back
+        </a>
+
+    </div>
+
+</div>
+
+
+{{-- Employee Information --}}
+<div class="card mb-4">
+
+    <div class="card-header bg-white py-3">
+
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-person me-2"></i>
+            Employee Information
+        </h6>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3 mb-md-0">
+
+                <div class="text-muted small mb-1">
+                    Employee Name
+                </div>
+
+                <div class="fw-semibold">
+                    {{ $leaveRequest->employee?->full_name ?? '-' }}
+                </div>
+
+            </div>
+
+
+            <div class="col-md-4 mb-3 mb-md-0">
+
+                <div class="text-muted small mb-1">
+                    NIK
+                </div>
+
+                <div class="fw-semibold">
+                    {{ $leaveRequest->employee?->nik ?? '-' }}
+                </div>
+
+            </div>
+
+
+            <div class="col-md-4">
+
+                <div class="text-muted small mb-1">
+                    Manager
+                </div>
+
+                <div class="fw-semibold">
+                    {{ $leaveRequest->manager?->full_name ?? '-' }}
+                </div>
+
+            </div>
+
         </div>
 
     </div>
 
-    <div class="card">
+</div>
 
-        <div class="card-body">
 
-            <div class="row mb-3">
+{{-- Leave Information --}}
+<div class="card mb-4">
 
-                <div class="col-md-6">
+    <div class="card-header bg-white py-3">
 
-                    <label class="form-label text-muted">
-                        Employee
-                    </label>
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-calendar-check me-2"></i>
+            Leave Information
+        </h6>
 
-                    <div>
-                        {{ $leaveRequest->employee->full_name }}
-                    </div>
+    </div>
 
+    <div class="card-body">
+
+        <div class="row">
+
+            {{-- Leave Type --}}
+            <div class="col-md-4 mb-4">
+
+                <div class="text-muted small mb-1">
+                    Leave Type
                 </div>
 
-                <div class="col-md-6">
+                <div class="fw-semibold">
 
-                    <label class="form-label text-muted">
-                        Leave Type
-                    </label>
+                    @switch($leaveRequest->leave_type)
 
-                    <div>
-                        {{ match($leaveRequest->leave_type) {
-                            'annual' => 'Annual Leave',
-                            'sick' => 'Sick Leave',
-                            'hajj' => 'Hajj Leave',
-                            'site' => 'Site Leave',
-                            'demobilization' => 'Demobilization Leave',
-                            default => ucfirst($leaveRequest->leave_type),
-                        } }}
-                    </div>
+                        @case('annual')
+                            Annual Leave
+                            @break
 
-                </div>
+                        @case('sick')
+                            Sick Leave
+                            @break
 
-            </div>
+                        @case('hajj')
+                            Hajj Leave
+                            @break
 
-            <div class="row mb-3">
+                        @case('site')
+                            Site Leave
+                            @break
 
-                <div class="col-md-4">
+                        @case('demobilization')
+                            Demobilization Leave
+                            @break
 
-                    <label class="form-label text-muted">
-                        First Date
-                    </label>
+                        @default
+                            {{ $leaveRequest->leave_type }}
 
-                    <div>
-                        {{ $leaveRequest->first_date->format('d M Y') }}
-                    </div>
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <label class="form-label text-muted">
-                        Last Date
-                    </label>
-
-                    <div>
-                        {{ $leaveRequest->last_date->format('d M Y') }}
-                    </div>
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <label class="form-label text-muted">
-                        Total Days
-                    </label>
-
-                    <div>
-                        {{ $leaveRequest->total_days }} day(s)
-                    </div>
+                    @endswitch
 
                 </div>
 
             </div>
 
-            <div class="mb-3">
 
-                <label class="form-label text-muted">
-                    Reason
-                </label>
+            {{-- Current Status --}}
+            <div class="col-md-4 mb-4">
 
-                <div>
-                    {{ $leaveRequest->reason }}
+                <div class="text-muted small mb-1">
+                    Current Status
                 </div>
-
-            </div>
-
-            <div class="mb-3">
-
-                <label class="form-label text-muted">
-                    Manager
-                </label>
-
-                <div>
-                    {{ $leaveRequest->manager->full_name }}
-                </div>
-
-            </div>
-
-            <div class="mb-3">
-
-                <label class="form-label text-muted">
-                    Status
-                </label>
 
                 <div>
 
                     @if($leaveRequest->status === 'pending_manager')
 
-                        <span class="badge bg-warning text-dark">
+                        <span class="badge bg-warning text-dark px-3 py-2">
+                            <i class="bi bi-clock me-1"></i>
                             Pending Manager
-                        </span>
-
-                    @elseif($leaveRequest->status === 'pending_hr')
-
-                        <span class="badge bg-info text-dark">
-                            Pending HR
                         </span>
 
                     @elseif($leaveRequest->status === 'approved')
 
-                        <span class="badge bg-success">
+                        <span class="badge bg-success px-3 py-2">
+                            <i class="bi bi-check-circle me-1"></i>
                             Approved
                         </span>
 
                     @elseif($leaveRequest->status === 'rejected')
 
-                        <span class="badge bg-danger">
+                        <span class="badge bg-danger px-3 py-2">
+                            <i class="bi bi-x-circle me-1"></i>
                             Rejected
                         </span>
 
                     @else
 
-                        <span class="badge bg-secondary">
+                        <span class="badge bg-secondary px-3 py-2">
                             {{ ucfirst($leaveRequest->status) }}
                         </span>
 
                     @endif
+
+                </div>
+
+            </div>
+
+
+            {{-- Total Days --}}
+            <div class="col-md-4 mb-4">
+
+                <div class="text-muted small mb-1">
+                    Total Working Days
+                </div>
+
+                <div class="fw-semibold">
+                    {{ $leaveRequest->total_days }} days
+                </div>
+
+            </div>
+
+
+            {{-- First Date --}}
+            <div class="col-md-4 mb-4">
+
+                <div class="text-muted small mb-1">
+                    First Date
+                </div>
+
+                <div>
+                    {{ $leaveRequest->first_date->format('d M Y') }}
+                </div>
+
+            </div>
+
+
+            {{-- Last Date --}}
+            <div class="col-md-4 mb-4">
+
+                <div class="text-muted small mb-1">
+                    Last Date
+                </div>
+
+                <div>
+                    {{ $leaveRequest->last_date->format('d M Y') }}
+                </div>
+
+            </div>
+
+
+            {{-- Submitted --}}
+            <div class="col-md-4 mb-4">
+
+                <div class="text-muted small mb-1">
+                    Submitted
+                </div>
+
+                <div>
+                    {{ $leaveRequest->created_at?->format('d M Y H:i') ?? '-' }}
+                </div>
+
+            </div>
+
+
+            {{-- Reason --}}
+            <div class="col-12">
+
+                <div class="text-muted small mb-2">
+                    Reason
+                </div>
+
+                <div class="border rounded p-3 bg-light">
+
+                    {{ $leaveRequest->reason ?: '-' }}
 
                 </div>
 
@@ -179,46 +268,168 @@
 
 </div>
 
+
+{{-- Manager Approval --}}
+<div class="card mb-4">
+
+    <div class="card-header bg-white py-3">
+
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-person-check me-2"></i>
+            Manager Approval
+        </h6>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3 mb-md-0">
+
+                <div class="text-muted small mb-1">
+                    Approving Manager
+                </div>
+
+                <div class="fw-semibold">
+                    {{ $leaveRequest->manager?->full_name ?? '-' }}
+                </div>
+
+            </div>
+
+
+            <div class="col-md-6">
+
+                <div class="text-muted small mb-1">
+                    Approval Status
+                </div>
+
+                <div>
+
+                    @if($leaveRequest->status === 'pending_manager')
+
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-clock me-1"></i>
+                            Awaiting Your Approval
+                        </span>
+
+                    @elseif($leaveRequest->status === 'approved')
+
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Approved
+                        </span>
+
+                        <div class="small text-muted mt-2">
+                            Approved at
+                            {{ $leaveRequest->manager_approved_at?->format('d M Y H:i') ?? '-' }}
+                        </div>
+
+                    @elseif($leaveRequest->status === 'rejected')
+
+                        <span class="badge bg-danger">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Rejected
+                        </span>
+
+                    @endif
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        {{-- Rejection Reason --}}
+        @if($leaveRequest->status === 'rejected')
+
+            <div class="mt-4">
+
+                <div class="text-muted small mb-2">
+                    Manager Rejection Reason
+                </div>
+
+                <div class="alert alert-danger mb-0">
+
+                    <i class="bi bi-exclamation-circle me-2"></i>
+
+                    {{ $leaveRequest->manager_rejection_reason ?: '-' }}
+
+                </div>
+
+            </div>
+
+        @endif
+
+    </div>
+
+</div>
+
+
+{{-- Approval Action --}}
 @if($leaveRequest->status === 'pending_manager')
 
-    <div class="mt-4 d-flex gap-2">
+    <div class="card border-0 shadow-sm mb-4">
 
-        {{-- Approve --}}
+        <div class="card-body">
 
-        <form
-            action="{{ route('leave-approvals.approve', $leaveRequest) }}"
-            method="POST"
-        >
-            @csrf
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
 
-            <button
-                type="submit"
-                class="btn btn-success"
-            >
-                <i class="bi bi-check-lg"></i>
-                Approve
-            </button>
+                <div>
 
-        </form>
+                    <h6 class="fw-semibold mb-1">
+                        Manager Action Required
+                    </h6>
+
+                    <p class="text-muted mb-0 small">
+                        Please review the leave information before approving or rejecting this request.
+                    </p>
+
+                </div>
+
+                <div class="d-flex gap-2">
+
+                    {{-- Approve --}}
+                    <form
+                        action="{{ route('leave-approvals.approve', $leaveRequest) }}"
+                        method="POST"
+                    >
+
+                        @csrf
+
+                        <button
+                            type="submit"
+                            class="btn btn-success px-4"
+                        >
+                            <i class="bi bi-check-lg me-1"></i>
+                            Approve
+                        </button>
+
+                    </form>
 
 
-        {{-- Reject --}}
+                    {{-- Reject --}}
+                    <button
+                        type="button"
+                        class="btn btn-danger px-4"
+                        data-bs-toggle="modal"
+                        data-bs-target="#rejectLeaveModal"
+                    >
+                        <i class="bi bi-x-lg me-1"></i>
+                        Reject
+                    </button>
 
-        <button
-            type="button"
-            class="btn btn-danger"
-            data-bs-toggle="modal"
-            data-bs-target="#rejectLeaveModal"
-        >
-            <i class="bi bi-x-lg"></i>
-            Reject
-        </button>
+                </div>
+
+            </div>
+
+        </div>
 
     </div>
 
 
     {{-- Reject Modal --}}
-
     <div
         class="modal fade"
         id="rejectLeaveModal"
@@ -227,7 +438,7 @@
         aria-hidden="true"
     >
 
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
 
             <div class="modal-content">
 
@@ -259,11 +470,15 @@
 
                     <div class="modal-body">
 
+                        <p class="text-muted small mb-3">
+                            Please provide a reason for rejecting this leave request.
+                        </p>
+
                         <div class="mb-3">
 
                             <label
                                 for="manager_rejection_reason"
-                                class="form-label"
+                                class="form-label fw-semibold"
                             >
                                 Rejection Reason
                             </label>
@@ -273,6 +488,7 @@
                                 id="manager_rejection_reason"
                                 class="form-control"
                                 rows="4"
+                                placeholder="Enter the reason for rejection..."
                                 required
                             ></textarea>
 
@@ -285,7 +501,7 @@
 
                         <button
                             type="button"
-                            class="btn btn-secondary"
+                            class="btn btn-light"
                             data-bs-dismiss="modal"
                         >
                             Cancel
@@ -295,6 +511,7 @@
                             type="submit"
                             class="btn btn-danger"
                         >
+                            <i class="bi bi-x-lg me-1"></i>
                             Reject Request
                         </button>
 
@@ -309,5 +526,7 @@
     </div>
 
 @endif
+
+</div>
 
 @endsection

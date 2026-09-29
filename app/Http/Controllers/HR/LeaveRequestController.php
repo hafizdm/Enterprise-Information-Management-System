@@ -5,6 +5,7 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Controller;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LeaveRequestController extends Controller
 {
@@ -154,6 +155,105 @@ class LeaveRequestController extends Controller
         return redirect()
             ->route('leave-requests.index')
             ->with('success', 'Leave request submitted successfully.');
+    }
+
+    public function show(LeaveRequest $leaveRequest)
+    {
+        $employee = auth()->user()->employee;
+
+        if (!$employee) {
+            abort(403, 'Your account is not linked to an employee.');
+        }
+
+        // Pastikan leave request memang milik employee yang sedang login
+        if ($leaveRequest->employee_id !== $employee->id) {
+            abort(403, 'You are not authorized to view this leave request.');
+        }
+
+        $leaveRequest->load([
+            'employee',
+            'manager',
+        ]);
+
+        return view(
+            'hr.leave_requests.show',
+            compact('leaveRequest')
+        );
+    }
+
+
+    public function pdf(LeaveRequest $leaveRequest)
+    {
+        $employee = auth()->user()->employee;
+
+        if (!$employee) {
+            abort(403, 'Your account is not linked to an employee.');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Authorization
+        |--------------------------------------------------------------------------
+        |
+        | HRD / System Administrator:
+        | Can view any leave request through leave.view-any.
+        |
+        | Employee:
+        | Can only view their own leave request.
+        |
+        */
+
+        if (
+            !auth()->user()->can('leave.view-any') &&
+            $leaveRequest->employee_id !== $employee->id
+        ) {
+            abort(403, 'You are not authorized to view this leave request.');
+        }
+
+        $leaveRequest->load([
+            'employee.division',
+            'employee.position',
+            'employee.project',
+            'manager',
+        ]);
+
+        $pdf = Pdf::loadView(
+            'hr.leave_requests.pdf',
+            compact('leaveRequest')
+        );
+
+        return $pdf->stream(
+            'leave-request-' . $leaveRequest->id . '.pdf'
+        );
+    }
+
+
+    public function destroy(LeaveRequest $leaveRequest)
+    {
+        $employee = auth()->user()->employee;
+
+        if (!$employee) {
+            abort(403, 'Your account is not linked to an employee.');
+        }
+
+        // Pastikan leave request milik employee yang sedang login
+        if ($leaveRequest->employee_id !== $employee->id) {
+            abort(403, 'You are not authorized to delete this leave request.');
+        }
+
+        // Hanya request yang masih menunggu approval manager yang boleh dihapus
+        if ($leaveRequest->status !== 'pending_manager') {
+            return back()
+                ->withErrors([
+                    'leave' => 'Only pending leave requests can be deleted.',
+                ]);
+        }
+
+        $leaveRequest->delete();
+
+        return redirect()
+            ->route('leave-requests.index')
+            ->with('success', 'Leave request deleted successfully.');
     }
 
 
