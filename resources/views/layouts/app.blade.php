@@ -300,10 +300,28 @@ blade
 
         .main-content {
             margin-left: 250px;
-
             padding-top: 64px;
-
             min-height: 100vh;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .content-wrapper {
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .main-navbar {
+            z-index: 1050;
+        }
+
+        .main-navbar .container-fluid,
+        .main-navbar .d-flex {
+            min-width: 0;
+        }
+
+        .main-navbar .dropdown-menu {
+            z-index: 1060;
         }
 
 
@@ -351,37 +369,100 @@ blade
 
 
         /*
-        |--------------------------------------------------------------------------
-        | Mobile
-        |--------------------------------------------------------------------------
+         |--------------------------------------------------------------------------
+         | Responsive Layout
+         |--------------------------------------------------------------------------
         */
 
+        .sidebar-backdrop {
+            display: none;
+        }
+
         @media (max-width: 991.98px) {
-
             .sidebar {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                bottom: 0;
+                width: min(280px, 85vw);
+                z-index: 1040;
+                background: #ffffff;
                 transform: translateX(-100%);
-
-                transition: transform 0.2s ease;
+                transition: transform 0.25s ease;
+                overflow-y: auto;
+                box-shadow: none;
             }
-
 
             .sidebar.show {
                 transform: translateX(0);
+                box-shadow: 4px 0 16px rgba(0, 0, 0, 0.08);
             }
 
+            .sidebar-backdrop.show {
+                display: block;
+                position: fixed;
+                inset: 64px 0 0;
+                z-index: 1035;
+                background: rgba(15, 23, 42, 0.35);
+            }
 
             .main-content {
                 margin-left: 0;
+                width: 100%;
+                min-width: 0;
+                padding-top: 64px;
             }
-
 
             .content-wrapper {
-                padding: 20px;
+                width: 100%;
+                min-width: 0;
+                padding: 20px 16px;
+                box-sizing: border-box;
             }
 
+            .main-navbar .container-fluid {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+                gap: 8px;
+            }
+
+            .main-navbar .d-flex.align-items-center.gap-3 {
+                gap: 8px !important;
+                min-width: 0;
+            }
+
+            .main-navbar .dropdown-toggle {
+                max-width: 45vw;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .page-title {
+                font-size: 22px;
+                overflow-wrap: anywhere;
+            }
+
+            .page-description {
+                overflow-wrap: anywhere;
+            }
         }
 
-    </style>
+        @media (max-width: 575.98px) {
+            .content-wrapper {
+                padding: 16px 12px;
+            }
+
+            .main-navbar .btn {
+                padding: 8px 10px;
+            }
+
+            .brand {
+                font-size: 19px;
+            }
+        }
+
+        </style>
 
 
     @stack('styles')
@@ -555,6 +636,13 @@ blade
 <!-- ========================================================= -->
 <!-- SIDEBAR -->
 <!-- ========================================================= -->
+
+<div
+    id="sidebarBackdrop"
+    class="sidebar-backdrop"
+    onclick="toggleSidebar(false)"
+></div>
+
 
 <aside
     id="sidebar"
@@ -851,6 +939,23 @@ blade
                 class="collapse submenu {{ $spdOpen ? 'show' : '' }}"
             >
 
+                @if(
+                auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Employee Approval')
+                )
+
+                    <a
+                        href="#"
+                        class="nav-link {{ request()->is('leave-requests*') ? 'active' : '' }}"
+                    >
+
+                        <i class="bi-file-earmark-bar-graph"></i>
+
+                        Add SPD Report
+
+                    </a>
+
+                @endif
+
 
                 <!-- ================================================= -->
                 <!-- ADD SPD -->
@@ -1030,13 +1135,28 @@ blade
 
 <script>
 
-    function toggleSidebar()
-    {
-        document
-            .getElementById('sidebar')
-            .classList
-            .toggle('show');
+    function toggleSidebar(forceState) {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+
+        if (!sidebar || !backdrop) return;
+
+        const shouldOpen =
+            typeof forceState === 'boolean'
+                ? forceState
+                : !sidebar.classList.contains('show');
+
+        sidebar.classList.toggle('show', shouldOpen);
+        backdrop.classList.toggle('show', shouldOpen);
+
+        document.body.style.overflow = shouldOpen ? 'hidden' : '';
     }
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 991.98) {
+            toggleSidebar(false);
+        }
+    });
 
 </script>
 
