@@ -9,6 +9,9 @@ use App\Http\Controllers\Master\PositionController;
 use App\Http\Controllers\Master\ProjectController;
 use App\Http\Controllers\LeaveApprovalSettingController;
 use App\Http\Controllers\HR\LeaveRequestController;
+use App\Http\Controllers\HR\SpdController;
+use App\Http\Controllers\HR\SpdApprovalController;
+use App\Http\Controllers\Master\CostLevelController;
 
 // =========================
 // Guest
@@ -31,20 +34,22 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
 
     // Logout
-    Route::post('/logout', [AuthController::class, 'logout'])
-        ->name('logout');
+        Route::post('/logout', [AuthController::class, 'logout'])
+            ->name('logout');
 
-    // Change Password
-    Route::get('/password/change', function () {
-        return view('auth.change-password');
-    })->name('password.change');
+        // Change Password
+        Route::get('/password/change', function () {
+            return view('auth.change-password');
+        })->name('password.change');
 
-    Route::post('/password/change', [AuthController::class, 'changePassword'])
-        ->name('password.change.update');
+        Route::post('/password/change', [AuthController::class, 'changePassword'])
+            ->name('password.change.update');
 
     
-    // Approval Manager Leave Request
+    // Approval Manager 
     Route::middleware('role:Employee Approval')->group(function () {
+
+        //Leave Approval Routes
 
         Route::get('/leave-approvals', [LeaveRequestController::class, 'managerIndex'])
             ->name('leave-approvals.index');
@@ -57,6 +62,20 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/leave-approvals/{leaveRequest}/reject', [LeaveRequestController::class, 'managerReject'])
             ->name('leave-approvals.reject');
+
+        // SPD Approval Routes
+
+        Route::get('/spd-approvals', [SpdApprovalController::class, 'index'])
+        ->name('spd.approvals.index');
+
+        Route::get('/spd-approvals/{spd}', [SpdApprovalController::class, 'show'])
+        ->name('spd.approvals.show');
+
+        Route::post('/spd-approvals/{spd}/approve', [SpdApprovalController::class, 'approve'])
+        ->name('spd.approvals.approve');
+
+        Route::post('/spd-approvals/{spd}/reject', [SpdApprovalController::class, 'reject'])
+        ->name('spd.approvals.reject');
 
     });
 
@@ -80,7 +99,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'force.password.change'])->group(function () {
 
-    // Dashboard
+// Dashboard
     Route::get('/', function () {
         return view('dashboard');
     })->name('dashboard');
@@ -92,11 +111,12 @@ Route::middleware('role:System Administrator')->group(function () {
     Route::resource('divisions', DivisionController::class);
     Route::resource('positions', PositionController::class);
     Route::resource('projects', ProjectController::class);
+    Route::resource('cost-levels', CostLevelController::class);
 
 });
 
 
-    // HR
+// HR
     Route::resource('employees', EmployeeController::class);
 
     Route::get('/leave-requests',[LeaveRequestController::class, 'index'])
@@ -117,7 +137,28 @@ Route::middleware('role:System Administrator')->group(function () {
     Route::delete('/leave-requests/{leaveRequest}', [LeaveRequestController::class, 'destroy'])
     ->name('leave-requests.destroy');
 
-    // User Management
+
+// SPD Routes
+    Route::middleware('auth')->group(function () {
+
+    Route::get('/spds', [SpdController::class, 'index'])
+        ->name('spds.index');
+
+    Route::get('/spds/create', [SpdController::class, 'create'])
+        ->name('spds.create');
+
+    Route::post('/spds', [SpdController::class, 'store'])
+        ->name('spds.store');
+
+    Route::get('/spds/{spd}', [SpdController::class, 'show'])
+        ->name('spds.show');
+
+    Route::delete('/spds/{spd}', [SpdController::class, 'destroy'])
+    ->name('spds.destroy');
+
+});
+
+ // User Management
     Route::resource('users', UserController::class);
 
     Route::get(

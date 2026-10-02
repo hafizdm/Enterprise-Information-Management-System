@@ -7,6 +7,7 @@ use App\Models\Division;
 use App\Models\Employee;
 use App\Models\Position;
 use App\Models\Project;
+use App\Models\CostLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -71,7 +72,7 @@ class EmployeeController extends Controller
         ));
     }
 
-    public function create()
+  public function create()
     {
         Gate::authorize('create', Employee::class);
 
@@ -79,12 +80,17 @@ class EmployeeController extends Controller
         $positions = Position::orderBy('name')->get();
         $projects = Project::orderBy('name')->get();
 
+        $costLevels = CostLevel::where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         $managers = Employee::orderBy('full_name')->get();
 
         return view('hr.employees.create', compact(
             'divisions',
             'positions',
             'projects',
+            'costLevels',
             'managers'
         ));
     }
@@ -191,6 +197,11 @@ class EmployeeController extends Controller
                 'exists:projects,id',
             ],
 
+            'cost_level_id' => [
+                'required',
+                'exists:cost_levels,id',
+            ],
+
             'employee_status' => [
                 'required',
                 Rule::in([
@@ -293,6 +304,7 @@ class EmployeeController extends Controller
                 'division_id' => $validated['division_id'],
                 'position_id' => $validated['position_id'],
                 'project_id' => $validated['project_id'] ?? null,
+                'cost_level_id' => $validated['cost_level_id'],
                 'employee_status' => $validated['employee_status'],
                 'contract_start_date' => $validated['contract_start_date'] ?? null,
                 'contract_end_date' => $validated['contract_end_date'] ?? null,
@@ -335,6 +347,7 @@ class EmployeeController extends Controller
             'division',
             'position',
             'project',
+            'costLevel',
             'manager',
             'user.roles',
         ]);
@@ -367,6 +380,10 @@ class EmployeeController extends Controller
         $positions = Position::orderBy('name')->get();
         $projects = Project::orderBy('name')->get();
 
+        $costLevels = CostLevel::where('is_active', true)
+        ->orderBy('name')
+        ->get();
+
         $managers = Employee::where('id', '!=', $employee->id)
             ->orderBy('full_name')
             ->get();
@@ -387,6 +404,7 @@ class EmployeeController extends Controller
             'divisions',
             'positions',
             'projects',
+            'costLevels',
             'managers',
             'activeAnnualLeave',
             'remainingAnnualLeave'
@@ -491,6 +509,11 @@ class EmployeeController extends Controller
                 'exists:projects,id',
             ],
 
+            'cost_level_id' => [
+                'required',
+                'exists:cost_levels,id',
+            ],
+
             'employee_status' => [
                 'required',
                 Rule::in([
@@ -584,6 +607,7 @@ class EmployeeController extends Controller
                 'division_id' => $validated['division_id'],
                 'position_id' => $validated['position_id'],
                 'project_id' => $validated['project_id'] ?? null,
+                'cost_level_id' => $validated['cost_level_id'],
                 'employee_status' => $validated['employee_status'],
                 'contract_start_date' => $validated['contract_start_date'] ?? null,
                 'contract_end_date' => $validated['contract_end_date'] ?? null,

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
@@ -26,6 +27,7 @@ class Employee extends Model
         'division_id',
         'position_id',
         'project_id',
+        'cost_level_id',
         'employee_status',
         'contract_start_date',
         'contract_end_date',
@@ -58,6 +60,11 @@ class Employee extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function costLevel()
+    {
+        return $this->belongsTo(CostLevel::class);
+    }
+
     public function manager()
     {
         return $this->belongsTo(Employee::class, 'report_to');
@@ -71,5 +78,20 @@ class Employee extends Model
     public function user()
     {
         return $this->hasOne(User::class);
+    }
+
+    public function spds(): HasMany
+    {
+        return $this->hasMany(Spd::class, 'employee_id');
+    }
+
+    public function managedSpds(): HasMany
+    {
+        return $this->hasMany(Spd::class, 'manager_id');
+    }
+
+    public function documentApprovalSpds(): HasMany
+    {
+        return $this->hasMany(Spd::class, 'approval_document_id');
     }
 }

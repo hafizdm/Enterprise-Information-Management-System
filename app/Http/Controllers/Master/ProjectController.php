@@ -38,6 +38,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
+            'cost_center' => 'required|string|max:255',
             'approval_employee_id' => 'required|exists:employees,id',
         ]);
 
@@ -74,6 +75,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
+            'cost_center' => 'required|string|max:255',
             'approval_employee_id' => 'required|exists:employees,id',
         ]);
 

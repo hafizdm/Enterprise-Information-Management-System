@@ -10,6 +10,7 @@
         </p>
     </div>
 
+
 <a href="{{ route('projects.create') }}" class="btn btn-primary">
     <i class="bi bi-plus-lg"></i>
     Add Project
@@ -46,6 +47,7 @@
                     <th width="60">#</th>
                     <th>Project Name</th>
                     <th>Location</th>
+                    <th>Cost Center</th>
                     <th>Approval Document</th>
                     <th width="180">Action</th>
                 </tr>
@@ -69,6 +71,10 @@
 
                         <td>
                             {{ $project->location }}
+                        </td>
+
+                        <td>
+                            {{ $project->cost_center }}
                         </td>
 
                         <td>
@@ -120,7 +126,7 @@
                 @empty
 
                     <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">
+                        <td colspan="6" class="text-center py-4 text-muted">
                             Belum ada data project.
                         </td>
                     </tr>

@@ -296,6 +296,43 @@
                         </select>
                     </div>
 
+                    <div class="col-md-4">
+
+                        <label class="form-label">
+                            Cost Level <span class="text-danger">*</span>
+                        </label>
+
+                        <select
+                            name="cost_level_id"
+                            class="form-select @error('cost_level_id') is-invalid @enderror"
+                            required
+                        >
+
+                            <option value="">
+                                Select Cost Level
+                            </option>
+
+                            @foreach ($costLevels as $costLevel)
+
+                                <option
+                                    value="{{ $costLevel->id }}"
+                                    @selected(old('cost_level_id') == $costLevel->id)
+                                >
+                                    {{ $costLevel->name }}
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                        @error('cost_level_id')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
+                    </div>
+
                     <div class="col-md-6">
                         <label class="form-label">Report To</label>
 

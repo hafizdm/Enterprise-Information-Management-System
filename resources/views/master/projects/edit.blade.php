@@ -75,6 +75,32 @@
 
         </div>
 
+        {{-- Cost Center --}}
+
+        <div class="mb-3">
+            <label for="cost_center" class="form-label">
+                Cost Center
+            </label>
+
+            <input
+                type="text"
+                name="cost_center"
+                id="cost_center"
+                class="form-control @error('cost_center') is-invalid @enderror"
+                value="{{ old('cost_center', $project->cost_center) }}"
+                placeholder="Enter cost center"
+                required
+            >
+
+            @error('cost_center')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+            @enderror
+
+        </div>
+
+
 
         {{-- Approval Document --}}
         <div class="mb-3">

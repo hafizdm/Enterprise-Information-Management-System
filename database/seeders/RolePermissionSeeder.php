@@ -48,6 +48,14 @@ class RolePermissionSeeder extends Seeder
             'spd.view-own',
             'spd.create',
             'spd.approve',
+            'spd.view-any',
+            'spd.delete',
+
+            // Cost Level
+            'cost-level.view',
+            'cost-level.create',
+            'cost-level.update',
+            'cost-level.delete',
 
             // Cash Advance
             'ca.view-own',
@@ -116,7 +124,6 @@ class RolePermissionSeeder extends Seeder
                 'employee.update-own',
 
                 'spd.view-own',
-                'spd.create',
 
                 'ca.view-own',
                 'ca.create',
@@ -168,6 +175,11 @@ class RolePermissionSeeder extends Seeder
                 'employee.create',
                 'employee.update-any',
                 'employee.delete',
+
+
+                'spd.view-any',
+                'spd.create',
+                'spd.delete',
 
                 'leave.view-any',
 

@@ -52,7 +52,6 @@
 
     </div>
 
-
     <div class="row mb-3">
 
         <div class="col-md-3">
@@ -65,6 +64,17 @@
 
     </div>
 
+    <div class="row mb-3">
+
+        <div class="col-md-3">
+            <strong>Cost Center</strong>
+        </div>
+
+        <div class="col-md-9">
+            {{ $project->cost_center }}
+        </div>
+
+    </div>
 
     <div class="row mb-3">
 
@@ -77,7 +87,6 @@
         </div>
 
     </div>
-
 
     <div class="row">
 
