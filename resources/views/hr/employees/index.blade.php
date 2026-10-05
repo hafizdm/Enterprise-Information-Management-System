@@ -162,39 +162,78 @@
 
     <div class="card-body p-0">
 
+        {{-- Horizontal scroll on smaller screens --}}
         <div class="table-responsive">
 
-            <table class="table table-hover align-middle mb-0">
+            <table
+                class="table table-hover align-middle mb-0"
+                style="min-width: 1250px;"
+            >
 
                 <thead class="table-light">
 
                     <tr>
 
-                        <th class="ps-4">
-                            Employee
+                        <th
+                            class="ps-4 text-nowrap"
+                            style="min-width: 220px;"
+                        >
+                            Employee Name
                         </th>
 
-                        <th>
+                        <th
+                            class="text-nowrap"
+                            style="min-width: 150px;"
+                        >
+                            NIK
+                        </th>
+
+                        <th
+                            class="text-nowrap"
+                            style="min-width: 240px;"
+                        >
+                            Email
+                        </th>
+
+                        <th
+                            class="text-nowrap"
+                            style="min-width: 170px;"
+                        >
                             Division
                         </th>
 
-                        <th>
+                        <th
+                            class="text-nowrap"
+                            style="min-width: 180px;"
+                        >
                             Position
                         </th>
 
-                        <th>
+                        <th
+                            class="text-nowrap"
+                            style="min-width: 220px;"
+                        >
                             Project
                         </th>
 
-                        <th>
+                        <th
+                            class="text-nowrap"
+                            style="min-width: 130px;"
+                        >
                             Status
                         </th>
 
-                        <th>
+                        <th
+                            class="text-nowrap"
+                            style="min-width: 130px;"
+                        >
                             Account
                         </th>
 
-                        <th class="text-end pe-4">
+                        <th
+                            class="text-end pe-4 text-nowrap"
+                            style="min-width: 160px;"
+                        >
                             Action
                         </th>
 
@@ -209,37 +248,42 @@
 
                         <tr>
 
-                            {{-- Employee --}}
+                            {{-- Employee Name --}}
                             <td class="ps-4">
 
-                                <div class="d-flex align-items-center">
+                                <span class="fw-semibold text-dark text-nowrap">
+                                    {{ $employee->full_name }}
+                                </span>
 
-                                    <div>
+                            </td>
 
-                                        <div class="fw-semibold">
-                                            {{ $employee->full_name }}
-                                        </div>
 
-                                        <div class="small text-muted">
+                            {{-- NIK --}}
+                            <td>
 
-                                            NIK:
-                                            {{ $employee->nik }}
+                                <span class="text-dark text-nowrap">
+                                    {{ $employee->nik }}
+                                </span>
 
-                                            @if($employee->email)
+                            </td>
 
-                                                <span class="mx-1">
-                                                    •
-                                                </span>
 
-                                                {{ $employee->email }}
+                            {{-- Email --}}
+                            <td>
 
-                                            @endif
+                                @if($employee->email)
 
-                                        </div>
+                                    <span class="text-dark text-nowrap">
+                                        {{ $employee->email }}
+                                    </span>
 
-                                    </div>
+                                @else
 
-                                </div>
+                                    <span class="text-muted">
+                                        -
+                                    </span>
+
+                                @endif
 
                             </td>
 
@@ -247,7 +291,7 @@
                             {{-- Division --}}
                             <td>
 
-                                <span class="text-dark">
+                                <span class="text-dark text-nowrap">
                                     {{ $employee->division?->name ?? '-' }}
                                 </span>
 
@@ -257,7 +301,7 @@
                             {{-- Position --}}
                             <td>
 
-                                <span class="text-dark">
+                                <span class="text-dark text-nowrap">
                                     {{ $employee->position?->name ?? '-' }}
                                 </span>
 
@@ -269,7 +313,7 @@
 
                                 @if($employee->project)
 
-                                    <span class="badge bg-light text-dark border">
+                                    <span class="badge bg-light text-dark border text-nowrap">
                                         {{ $employee->project->name }}
                                     </span>
 
@@ -289,14 +333,14 @@
 
                                 @if ($employee->employee_status === 'Permanent')
 
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle text-nowrap">
                                         <i class="bi bi-check-circle me-1"></i>
                                         Permanent
                                     </span>
 
                                 @else
 
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-nowrap">
                                         <i class="bi bi-clock me-1"></i>
                                         Contract
                                     </span>
@@ -311,14 +355,14 @@
 
                                 @if ($employee->user)
 
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle text-nowrap">
                                         <i class="bi bi-person-check me-1"></i>
                                         Active
                                     </span>
 
                                 @else
 
-                                    <span class="badge bg-light text-secondary border">
+                                    <span class="badge bg-light text-secondary border text-nowrap">
                                         <i class="bi bi-person-x me-1"></i>
                                         No Account
                                     </span>
@@ -335,13 +379,15 @@
 
                                     <a
                                         href="{{ route('employees.show', $employee) }}"
-                                        class="btn btn-sm btn-outline-primary"
+                                        class="btn btn-sm btn-outline-primary text-nowrap"
                                         title="View employee"
                                     >
                                         <i class="bi bi-eye"></i>
+
                                         <span class="d-none d-lg-inline ms-1">
                                             View
                                         </span>
+
                                     </a>
 
 
@@ -349,13 +395,15 @@
 
                                         <a
                                             href="{{ route('employees.edit', $employee) }}"
-                                            class="btn btn-sm btn-outline-secondary"
+                                            class="btn btn-sm btn-outline-secondary text-nowrap"
                                             title="Edit employee"
                                         >
                                             <i class="bi bi-pencil"></i>
+
                                             <span class="d-none d-lg-inline ms-1">
                                                 Edit
                                             </span>
+
                                         </a>
 
                                     @endcan
@@ -372,7 +420,7 @@
                         <tr>
 
                             <td
-                                colspan="7"
+                                colspan="9"
                                 class="text-center py-5"
                             >
 
@@ -418,46 +466,157 @@
     </div>
 
 
-    {{-- Pagination --}}
-    @if ($employees->hasPages())
+   {{-- =========================================================
+    PAGINATION
+========================================================= --}}
+@if ($employees->hasPages())
 
-        <div class="card-footer bg-white border-0 py-3">
+    <div class="card-footer bg-white border-top py-3 px-4">
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
 
-                <small class="text-muted">
+            {{-- =================================================
+                PAGINATION INFORMATION
+            ================================================== --}}
+            <div class="text-muted small text-center text-md-start">
 
-                    Showing
-                    <strong>
-                        {{ $employees->firstItem() }}
-                    </strong>
+                Showing
 
-                    to
+                <strong class="text-dark">
+                    {{ $employees->firstItem() }}
+                </strong>
 
-                    <strong>
-                        {{ $employees->lastItem() }}
-                    </strong>
+                to
 
-                    of
+                <strong class="text-dark">
+                    {{ $employees->lastItem() }}
+                </strong>
 
-                    <strong>
-                        {{ $employees->total() }}
-                    </strong>
+                of
 
-                    employees
+                <strong class="text-dark">
+                    {{ $employees->total() }}
+                </strong>
 
-                </small>
-
-
-                <div>
-                    {{ $employees->links() }}
-                </div>
+                employees
 
             </div>
 
+
+            {{-- =================================================
+                PAGINATION NAVIGATION
+            ================================================== --}}
+            <nav
+                aria-label="Employee pagination"
+                class="employee-pagination"
+            >
+
+                <ul class="pagination mb-0">
+
+                    {{-- Previous --}}
+                    @if ($employees->onFirstPage())
+
+                        <li class="page-item disabled">
+
+                            <span class="page-link">
+
+                                <i class="bi bi-chevron-left"></i>
+
+                            </span>
+
+                        </li>
+
+                    @else
+
+                        <li class="page-item">
+
+                            <a
+                                class="page-link"
+                                href="{{ $employees->previousPageUrl() }}"
+                                aria-label="Previous"
+                            >
+
+                                <i class="bi bi-chevron-left"></i>
+
+                            </a>
+
+                        </li>
+
+                    @endif
+
+
+                    {{-- Page Numbers --}}
+                    @foreach ($employees->getUrlRange(1, $employees->lastPage()) as $page => $url)
+
+                        @if ($page == $employees->currentPage())
+
+                            <li class="page-item active">
+
+                                <span class="page-link">
+                                    {{ $page }}
+                                </span>
+
+                            </li>
+
+                        @else
+
+                            <li class="page-item">
+
+                                <a
+                                    class="page-link"
+                                    href="{{ $url }}"
+                                >
+                                    {{ $page }}
+                                </a>
+
+                            </li>
+
+                        @endif
+
+                    @endforeach
+
+
+                    {{-- Next --}}
+                    @if ($employees->hasMorePages())
+
+                        <li class="page-item">
+
+                            <a
+                                class="page-link"
+                                href="{{ $employees->nextPageUrl() }}"
+                                aria-label="Next"
+                            >
+
+                                <i class="bi bi-chevron-right"></i>
+
+                            </a>
+
+                        </li>
+
+                    @else
+
+                        <li class="page-item disabled">
+
+                            <span class="page-link">
+
+                                <i class="bi bi-chevron-right"></i>
+
+                            </span>
+
+                        </li>
+
+                    @endif
+
+                </ul>
+
+            </nav>
+
         </div>
 
-    @endif
+    </div>
+
+@endif
+
 
 </div>
 
@@ -465,3 +624,184 @@
 </div>
 
 @endsection
+
+@push('styles')
+
+<style>
+
+    /*
+    |--------------------------------------------------------------------------
+    | Employee Pagination
+    |--------------------------------------------------------------------------
+    */
+
+    .employee-pagination .pagination {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 4px;
+
+        margin: 0;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Page Link
+    |--------------------------------------------------------------------------
+    */
+
+    .employee-pagination .page-link {
+
+        width: 38px;
+
+        height: 38px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        padding: 0;
+
+        border: 1px solid #dee2e6;
+
+        border-radius: 8px !important;
+
+        background: #ffffff;
+
+        color: #495057;
+
+        font-size: 14px;
+
+        font-weight: 500;
+
+        line-height: 1;
+
+        text-decoration: none;
+
+        transition: all 0.15s ease;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hover
+    |--------------------------------------------------------------------------
+    */
+
+    .employee-pagination .page-link:hover {
+
+        background-color: #f8f9fa;
+
+        border-color: #ced4da;
+
+        color: #212529;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Active
+    |--------------------------------------------------------------------------
+    */
+
+    .employee-pagination .page-item.active .page-link {
+
+        background-color: #0d6efd;
+
+        border-color: #0d6efd;
+
+        color: #ffffff;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Disabled
+    |--------------------------------------------------------------------------
+    */
+
+    .employee-pagination .page-item.disabled .page-link {
+
+        background-color: #ffffff;
+
+        border-color: #e9ecef;
+
+        color: #adb5bd;
+
+        pointer-events: none;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Focus
+    |--------------------------------------------------------------------------
+    */
+
+    .employee-pagination .page-link:focus {
+
+        box-shadow: none;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mobile
+    |--------------------------------------------------------------------------
+    */
+
+    @media (max-width: 767.98px) {
+
+        .card-footer {
+
+            padding-left: 16px !important;
+
+            padding-right: 16px !important;
+
+        }
+
+
+        .employee-pagination {
+
+            width: 100%;
+
+            display: flex;
+
+            justify-content: center;
+
+        }
+
+
+        .employee-pagination .pagination {
+
+            justify-content: center;
+
+        }
+
+
+        .employee-pagination .page-link {
+
+            width: 36px;
+
+            height: 36px;
+
+            font-size: 13px;
+
+        }
+
+    }
+
+</style>
+
+@endpush

@@ -8,6 +8,7 @@ use App\Models\Spd;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Project;
 
 class SpdController extends Controller
 {
@@ -54,7 +55,16 @@ class SpdController extends Controller
             ->orderBy('full_name')
             ->get();
 
-        return view('hr.spds.create', compact('employees'));
+        $projects = Project::with([
+            'approvalEmployee',
+        ])
+            ->orderBy('name')
+            ->get();
+
+        return view(
+            'hr.spds.create',
+            compact('employees', 'projects')
+        );
     }
 
     /**
@@ -72,6 +82,11 @@ class SpdController extends Controller
             'employee_id' => [
                 'required',
                 'exists:employees,id',
+            ],
+
+            'project_id' => [
+                'required',
+                'exists:projects,id',
             ],
 
             'travel_type' => [
@@ -145,7 +160,6 @@ class SpdController extends Controller
 
             $employee = Employee::with([
                 'manager',
-                'project.approvalEmployee',
                 'costLevel',
             ])
                 ->lockForUpdate()
@@ -183,16 +197,14 @@ class SpdController extends Controller
             |--------------------------------------------------------------------------
             | Project
             |--------------------------------------------------------------------------
+            | Project is selected specifically for the SPD.
+            | It does not have to be the employee's master project.
             */
 
-            $project = $employee->project;
-
-            if (!$project) {
-                abort(
-                    422,
-                    'The selected employee does not have a project assigned.'
-                );
-            }
+            $project = Project::with([
+                'approvalEmployee',
+            ])
+                ->findOrFail($validated['project_id']);
 
             /*
             |--------------------------------------------------------------------------

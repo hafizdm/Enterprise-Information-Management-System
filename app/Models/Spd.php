@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Spd extends Model
 {
@@ -92,5 +93,13 @@ class Spd extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * SPD Report associated with this SPD.
+     */
+    public function report(): HasOne
+    {
+        return $this->hasOne(SpdReport::class);
     }
 }

@@ -12,6 +12,8 @@ use App\Http\Controllers\HR\LeaveRequestController;
 use App\Http\Controllers\HR\SpdController;
 use App\Http\Controllers\HR\SpdApprovalController;
 use App\Http\Controllers\Master\CostLevelController;
+use App\Http\Controllers\HR\SpdReportController;
+use App\Http\Controllers\HR\SpdReportApprovalController;
 
 // =========================
 // Guest
@@ -77,6 +79,21 @@ Route::middleware('auth')->group(function () {
         Route::post('/spd-approvals/{spd}/reject', [SpdApprovalController::class, 'reject'])
         ->name('spd.approvals.reject');
 
+
+        // SPD Report Approval Routes
+
+        Route::get('/spd-report-approvals', [SpdReportApprovalController::class, 'index'])
+            ->name('spd-report-approvals.index');
+
+        Route::get('/spd-report-approvals/{spdReport}', [SpdReportApprovalController::class, 'show'])
+            ->name('spd-report-approvals.show');
+
+        Route::post('/spd-report-approvals/{spdReport}/approve', [SpdReportApprovalController::class, 'approve'])
+            ->name('spd-report-approvals.approve');
+
+        Route::post('/spd-report-approvals/{spdReport}/reject', [SpdReportApprovalController::class, 'reject'])
+            ->name('spd-report-approvals.reject');
+
     });
 
 
@@ -136,6 +153,19 @@ Route::middleware('role:System Administrator')->group(function () {
 
     Route::delete('/leave-requests/{leaveRequest}', [LeaveRequestController::class, 'destroy'])
     ->name('leave-requests.destroy');
+
+// SPD Report Routes
+    Route::get('/spd-reports', [SpdReportController::class, 'index'])
+        ->name('spd-reports.index');
+
+    Route::get('/spd-reports/create', [SpdReportController::class, 'create'])
+        ->name('spd-reports.create');
+
+    Route::post('/spd-reports', [SpdReportController::class, 'store'])
+        ->name('spd-reports.store');
+
+    Route::get('/spd-reports/{spdReport}', [SpdReportController::class, 'show'])
+        ->name('spd-reports.show');
 
 
 // SPD Routes

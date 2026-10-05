@@ -2,821 +2,674 @@
 
 @section('content')
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid">
 
-    <div>
-        <h4 class="mb-1">Create SPD</h4>
-
-        <p class="text-muted mb-0">
-            Create a business trip request for an employee
-        </p>
-    </div>
-
-    <a
-        href="{{ route('spds.index') }}"
-        class="btn btn-outline-secondary"
-    >
-        <i class="bi bi-arrow-left me-1"></i>
-        Back
-    </a>
-
-</div>
-
-<form
-    action="{{ route('spds.store') }}"
-    method="POST"
->
-
-    @csrf
-
-    {{-- ========================================================= --}}
-    {{-- Employee Information --}}
-    {{-- ========================================================= --}}
-
-    <div class="card border-0 shadow-sm mb-4">
-
-        <div class="card-header bg-white py-3">
-
-            <h6 class="mb-0">
-                <i class="bi bi-person-vcard me-2"></i>
-                Employee Information
-            </h6>
-
+    {{-- Page Header --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">
+                <i class="bi bi-file-earmark-plus me-2"></i>
+                Create SPD
+            </h4>
+            <p class="text-muted mb-0">
+                Create a new business trip request for an employee.
+            </p>
         </div>
 
-        <div class="card-body">
+        <div>
+            <a href="{{ route('spds.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Back
+            </a>
+        </div>
+    </div>
 
-            <div class="row g-3">
+    {{-- Validation Errors --}}
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <div class="fw-semibold mb-2">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Please correct the following errors:
+            </div>
 
-                {{-- Employee --}}
-                <div class="col-md-6">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-                    <label
-                        for="employee_id"
-                        class="form-label"
-                    >
-                        Employee
-                        <span class="text-danger">*</span>
-                    </label>
+    <form action="{{ route('spds.store') }}" method="POST">
+        @csrf
 
-                    <select
-                        name="employee_id"
-                        id="employee_id"
-                        class="form-select @error('employee_id') is-invalid @enderror"
-                        required
-                    >
+        {{-- Employee Information --}}
+        <div class="card shadow-sm border-0 mb-4">
 
-                        <option value="">
-                            Select Employee
-                        </option>
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-person me-2"></i>
+                    Employee Information
+                </h6>
+            </div>
 
-                        @foreach ($employees as $employee)
+            <div class="card-body">
 
-                            <option
-                                value="{{ $employee->id }}"
-                                data-manager="{{ $employee->manager?->full_name ?? 'No manager assigned' }}"
-                                data-spd-limit="{{ $employee->spd_limit }}"
-                                data-project="{{ $employee->project?->name ?? 'No project assigned' }}"
-                                data-project-id="{{ $employee->project?->id ?? '' }}"
-                                data-cost-center="{{ $employee->project?->cost_center ?? 'Not assigned' }}"
-                                data-cost-control="{{ $employee->project?->approvalEmployee?->full_name ?? 'Not assigned' }}"
-                                data-cost-level="{{ $employee->costLevel?->name ?? 'No Cost Level assigned' }}"
-                                data-meals-domestic="{{ $employee->costLevel?->meals_domestic ?? 0 }}"
-                                data-allowance-domestic="{{ $employee->costLevel?->allowance_domestic ?? 0 }}"
-                                data-meals-international="{{ $employee->costLevel?->meals_international ?? 0 }}"
-                                data-allowance-international="{{ $employee->costLevel?->allowance_international ?? 0 }}"
-                                @selected(old('employee_id') == $employee->id)
-                            >
-                                {{ $employee->full_name }}
-                            </option>
+                <div class="row g-3">
 
-                        @endforeach
+                    {{-- Employee --}}
+                    <div class="col-md-6">
+                        <label for="employee_id" class="form-label fw-semibold">
+                            Employee <span class="text-danger">*</span>
+                        </label>
 
-                    </select>
+                        <select
+                            name="employee_id"
+                            id="employee_id"
+                            class="form-select @error('employee_id') is-invalid @enderror"
+                            required
+                        >
+                            <option value="">-- Select Employee --</option>
 
-                    @error('employee_id')
+                            @foreach ($employees as $employee)
+                                <option
+                                    value="{{ $employee->id }}"
+                                    data-manager="{{ $employee->manager?->full_name ?? 'Not assigned' }}"
+                                    data-spd-limit="{{ number_format((float) $employee->spd_limit, 2, '.', '') }}"
+                                    data-cost-level="{{ $employee->costLevel?->name ?? 'Not assigned' }}"
+                                    data-meals-domestic="{{ (float) ($employee->costLevel?->meals_domestic ?? 0) }}"
+                                    data-allowance-domestic="{{ (float) ($employee->costLevel?->allowance_domestic ?? 0) }}"
+                                    data-meals-international="{{ (float) ($employee->costLevel?->meals_international ?? 0) }}"
+                                    data-allowance-international="{{ (float) ($employee->costLevel?->allowance_international ?? 0) }}"
+                                    @selected(old('employee_id') == $employee->id)
+                                >
+                                    {{ $employee->full_name }}
+                                    @if ($employee->nik)
+                                        — {{ $employee->nik }}
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
 
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
+                        @error('employee_id')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
 
-                    @enderror
+                    {{-- Manager --}}
+                    <div class="col-md-6">
+                        <label for="manager_display" class="form-label fw-semibold">
+                            Manager
+                        </label>
 
+                        <input
+                            type="text"
+                            id="manager_display"
+                            class="form-control bg-light"
+                            value=""
+                            readonly
+                        >
+                    </div>
+
+                    {{-- SPD Limit --}}
+                    <div class="col-md-4">
+                        <label for="spd_limit_display" class="form-label fw-semibold">
+                            Available SPD Limit
+                        </label>
+
+                        <input
+                            type="text"
+                            id="spd_limit_display"
+                            class="form-control bg-light"
+                            value=""
+                            readonly
+                        >
+                    </div>
+
+                    {{-- Cost Level --}}
+                    <div class="col-md-4">
+                        <label for="cost_level_display" class="form-label fw-semibold">
+                            Cost Level
+                        </label>
+
+                        <input
+                            type="text"
+                            id="cost_level_display"
+                            class="form-control bg-light"
+                            value=""
+                            readonly
+                        >
+                    </div>
                 </div>
 
-                {{-- Manager --}}
-                <div class="col-md-6">
+            </div>
+        </div>
 
-                    <label class="form-label">
-                        Manager
-                    </label>
 
-                    <input
-                        type="text"
-                        id="manager_display"
-                        class="form-control bg-light"
-                        value=""
-                        readonly
-                    >
+        {{-- Project Information --}}
+        <div class="card shadow-sm border-0 mb-4">
 
-                </div>
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-building me-2"></i>
+                    Project Information
+                </h6>
+            </div>
 
-                {{-- SPD Limit --}}
-                <div class="col-md-6">
+            <div class="card-body">
 
-                    <label class="form-label">
-                        Available SPD Limit
-                    </label>
+                <div class="row g-3">
 
-                    <input
-                        type="text"
-                        id="spd_limit_display"
-                        class="form-control bg-light"
-                        value=""
-                        readonly
-                    >
+                    {{-- SPD Project --}}
+                    <div class="col-md-6">
+                        <label for="project_id" class="form-label fw-semibold">
+                            SPD Project <span class="text-danger">*</span>
+                        </label>
 
-                </div>
+                        <select
+                            name="project_id"
+                            id="project_id"
+                            class="form-select @error('project_id') is-invalid @enderror"
+                            required
+                        >
+                            <option value="">-- Select Project --</option>
 
-                {{-- Project --}}
-                <div class="col-md-6">
+                            @foreach ($projects as $project)
+                                <option
+                                    value="{{ $project->id }}"
+                                    data-cost-center="{{ $project->cost_center ?? 'Not assigned' }}"
+                                    data-cost-control="{{ $project->approvalEmployee?->full_name ?? 'Not assigned' }}"
+                                    data-location="{{ $project->location ?? 'Not assigned' }}"
+                                    @selected(old('project_id') == $project->id)
+                                >
+                                    {{ $project->name }}
+                                </option>
+                            @endforeach
+                        </select>
 
-                    <label class="form-label">
-                        Project
-                    </label>
+                        @error('project_id')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
 
-                    <input
-                        type="text"
-                        id="project_display"
-                        class="form-control bg-light"
-                        value=""
-                        readonly
-                    >
+                        <small class="text-muted">
+                            Select the project that will bear the cost of this SPD.
+                        </small>
+                    </div>
 
-                </div>
+                    {{-- Cost Center --}}
+                    <div class="col-md-3">
+                        <label for="cost_center_display" class="form-label fw-semibold">
+                            Cost Center
+                        </label>
 
-                {{-- Cost Center --}}
-                <div class="col-md-6">
+                        <input
+                            type="text"
+                            id="cost_center_display"
+                            class="form-control bg-light"
+                            value=""
+                            readonly
+                        >
+                    </div>
 
-                    <label class="form-label">
-                        Cost Center
-                    </label>
+                    {{-- Cost Control --}}
+                    <div class="col-md-3">
+                        <label for="cost_control_display" class="form-label fw-semibold">
+                            Cost Control
+                        </label>
 
-                    <input
-                        type="text"
-                        id="cost_center_display"
-                        class="form-control bg-light"
-                        value=""
-                        readonly
-                    >
-
-                </div>
-
-                {{-- Cost Control --}}
-                <div class="col-md-6">
-
-                    <label class="form-label">
-                        Cost Control
-                    </label>
-
-                    <input
-                        type="text"
-                        id="cost_control_display"
-                        class="form-control bg-light"
-                        value=""
-                        readonly
-                    >
-
-                </div>
-
-                {{-- Cost Level --}}
-                <div class="col-md-6">
-
-                    <label class="form-label">
-                        Cost Level
-                    </label>
-
-                    <input
-                        type="text"
-                        id="cost_level_display"
-                        class="form-control bg-light"
-                        value=""
-                        readonly
-                    >
+                        <input
+                            type="text"
+                            id="cost_control_display"
+                            class="form-control bg-light"
+                            value=""
+                            readonly
+                        >
+                    </div>
 
                 </div>
 
             </div>
-
         </div>
 
-    </div>
 
+        {{-- Travel Information --}}
+        <div class="card shadow-sm border-0 mb-4">
 
-    {{-- ========================================================= --}}
-    {{-- Business Trip --}}
-    {{-- ========================================================= --}}
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-airplane me-2"></i>
+                    Travel Information
+                </h6>
+            </div>
 
-    <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
 
-        <div class="card-header bg-white py-3">
+                <div class="row g-3">
 
-            <h6 class="mb-0">
-                <i class="bi bi-airplane me-2"></i>
-                Business Trip Information
-            </h6>
+                    {{-- Travel Type --}}
+                    <div class="col-md-4">
+                        <label for="travel_type" class="form-label fw-semibold">
+                            Travel Type <span class="text-danger">*</span>
+                        </label>
 
+                        <select
+                            name="travel_type"
+                            id="travel_type"
+                            class="form-select @error('travel_type') is-invalid @enderror"
+                            required
+                        >
+                            <option value="">-- Select Travel Type --</option>
+                            <option value="domestic" @selected(old('travel_type') === 'domestic')>
+                                Domestic
+                            </option>
+                            <option value="international" @selected(old('travel_type') === 'international')>
+                                International
+                            </option>
+                        </select>
+
+                        @error('travel_type')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
+                    {{-- Transportation --}}
+                    <div class="col-md-4">
+                        <label for="transportation" class="form-label fw-semibold">
+                            Transportation <span class="text-danger">*</span>
+                        </label>
+
+                        <select
+                            name="transportation"
+                            id="transportation"
+                            class="form-select @error('transportation') is-invalid @enderror"
+                            required
+                        >
+                            <option value="">-- Select Transportation --</option>
+                            <option value="car" @selected(old('transportation') === 'car')>
+                                Car
+                            </option>
+                            <option value="plane" @selected(old('transportation') === 'plane')>
+                                Plane
+                            </option>
+                            <option value="ship" @selected(old('transportation') === 'ship')>
+                                Ship
+                            </option>
+                            <option value="other" @selected(old('transportation') === 'other')>
+                                Other
+                            </option>
+                        </select>
+
+                        @error('transportation')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
+                    {{-- Advance Payment --}}
+                    <div class="col-md-4">
+                        <label for="advance_payment" class="form-label fw-semibold">
+                            Advance Payment <span class="text-danger">*</span>
+                        </label>
+
+                        <select
+                            name="advance_payment"
+                            id="advance_payment"
+                            class="form-select @error('advance_payment') is-invalid @enderror"
+                            required
+                        >
+                            <option value="">-- Select --</option>
+                            <option value="1" @selected(old('advance_payment') === '1')>
+                                Yes
+                            </option>
+                            <option value="0" @selected(old('advance_payment') === '0')>
+                                No
+                            </option>
+                        </select>
+
+                        @error('advance_payment')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
+                    {{-- From --}}
+                    <div class="col-md-6">
+                        <label for="from" class="form-label fw-semibold">
+                            From <span class="text-danger">*</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            name="from"
+                            id="from"
+                            class="form-control @error('from') is-invalid @enderror"
+                            value="{{ old('from') }}"
+                            required
+                        >
+
+                        @error('from')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
+                    {{-- Destination --}}
+                    <div class="col-md-6">
+                        <label for="destination" class="form-label fw-semibold">
+                            Destination <span class="text-danger">*</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            name="destination"
+                            id="destination"
+                            class="form-control @error('destination') is-invalid @enderror"
+                            value="{{ old('destination') }}"
+                            required
+                        >
+
+                        @error('destination')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
+                    {{-- Departure --}}
+                    <div class="col-md-6">
+                        <label for="date_departure" class="form-label fw-semibold">
+                            Departure Date <span class="text-danger">*</span>
+                        </label>
+
+                        <input
+                            type="date"
+                            name="date_departure"
+                            id="date_departure"
+                            class="form-control @error('date_departure') is-invalid @enderror"
+                            value="{{ old('date_departure') }}"
+                            required
+                        >
+
+                        @error('date_departure')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
+                    {{-- Return --}}
+                    <div class="col-md-6">
+                        <label for="date_return" class="form-label fw-semibold">
+                            Return Date <span class="text-danger">*</span>
+                        </label>
+
+                        <input
+                            type="date"
+                            name="date_return"
+                            id="date_return"
+                            class="form-control @error('date_return') is-invalid @enderror"
+                            value="{{ old('date_return') }}"
+                            required
+                        >
+
+                        @error('date_return')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
+                    {{-- Total Days --}}
+                    <div class="col-md-4">
+                        <label for="total_days_display" class="form-label fw-semibold">
+                            Total Days
+                        </label>
+
+                        <input
+                            type="text"
+                            id="total_days_display"
+                            class="form-control bg-light"
+                            value="0"
+                            readonly
+                        >
+                    </div>
+
+                </div>
+
+            </div>
         </div>
 
-        <div class="card-body">
 
-            <div class="row g-3">
+        {{-- Cost & Allowance --}}
+        <div class="card shadow-sm border-0 mb-4">
 
-                {{-- Travel Type --}}
-                <div class="col-md-6">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-cash-stack me-2"></i>
+                    Cost & Allowance
+                </h6>
+            </div>
 
-                    <label
-                        for="travel_type"
-                        class="form-label"
-                    >
-                        Travel Type
-                        <span class="text-danger">*</span>
-                    </label>
+            <div class="card-body">
 
-                    <select
-                        name="travel_type"
-                        id="travel_type"
-                        class="form-select @error('travel_type') is-invalid @enderror"
-                        required
-                    >
+                <div class="row g-3">
 
-                        <option value="">
-                            Select Travel Type
-                        </option>
+                    {{-- Meals Per Day --}}
+                    <div class="col-md-3">
+                        <label for="meals_per_day_display" class="form-label fw-semibold">
+                            Meals / Day
+                        </label>
 
-                        <option
-                            value="domestic"
-                            @selected(old('travel_type') === 'domestic')
+                        <input
+                            type="text"
+                            id="meals_per_day_display"
+                            class="form-control bg-light"
+                            value="Rp 0"
+                            readonly
                         >
-                            Domestic
-                        </option>
+                    </div>
 
-                        <option
-                            value="international"
-                            @selected(old('travel_type') === 'international')
+                    {{-- Allowance Per Day --}}
+                    <div class="col-md-3">
+                        <label for="allowance_per_day_display" class="form-label fw-semibold">
+                            Allowance / Day
+                        </label>
+
+                        <input
+                            type="text"
+                            id="allowance_per_day_display"
+                            class="form-control bg-light"
+                            value="Rp 0"
+                            readonly
                         >
-                            International
-                        </option>
+                    </div>
 
-                    </select>
+                    {{-- Local Transport --}}
+                    <div class="col-md-3">
+                        <label for="local_transport" class="form-label fw-semibold">
+                            Local Transport
+                        </label>
 
-                    @error('travel_type')
-
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
-                </div>
-
-                {{-- Transportation --}}
-                <div class="col-md-6">
-
-                    <label
-                        for="transportation"
-                        class="form-label"
-                    >
-                        Transportation
-                        <span class="text-danger">*</span>
-                    </label>
-
-                    <select
-                        name="transportation"
-                        id="transportation"
-                        class="form-select @error('transportation') is-invalid @enderror"
-                        required
-                    >
-
-                        <option value="">
-                            Select Transportation
-                        </option>
-
-                        <option
-                            value="car"
-                            @selected(old('transportation') === 'car')
+                        <input
+                            type="number"
+                            name="local_transport"
+                            id="local_transport"
+                            class="form-control @error('local_transport') is-invalid @enderror"
+                            value="{{ old('local_transport', 0) }}"
+                            min="0"
+                            step="0.01"
                         >
-                            Car
-                        </option>
 
-                        <option
-                            value="plane"
-                            @selected(old('transportation') === 'plane')
+                        @error('local_transport')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
+                    {{-- Contingencies --}}
+                    <div class="col-md-3">
+                        <label for="contingencies" class="form-label fw-semibold">
+                            Contingencies
+                        </label>
+
+                        <input
+                            type="number"
+                            name="contingencies"
+                            id="contingencies"
+                            class="form-control @error('contingencies') is-invalid @enderror"
+                            value="{{ old('contingencies', 0) }}"
+                            min="0"
+                            step="0.01"
                         >
-                            Plane
-                        </option>
 
-                        <option
-                            value="ship"
-                            @selected(old('transportation') === 'ship')
+                        @error('contingencies')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
+                    {{-- Total Meals --}}
+                    <div class="col-md-4">
+                        <label for="total_meals_display" class="form-label fw-semibold">
+                            Total Meals
+                        </label>
+
+                        <input
+                            type="text"
+                            id="total_meals_display"
+                            class="form-control bg-light"
+                            value="Rp 0"
+                            readonly
                         >
-                            Ship
-                        </option>
+                    </div>
 
-                        <option
-                            value="other"
-                            @selected(old('transportation') === 'other')
+                    {{-- Total Allowance --}}
+                    <div class="col-md-4">
+                        <label for="total_allowance_display" class="form-label fw-semibold">
+                            Total Allowance
+                        </label>
+
+                        <input
+                            type="text"
+                            id="total_allowance_display"
+                            class="form-control bg-light"
+                            value="Rp 0"
+                            readonly
                         >
-                            Other
-                        </option>
+                    </div>
 
-                    </select>
+                    {{-- Balance Received --}}
+                    <div class="col-md-4">
+                        <label for="balance_received_display" class="form-label fw-semibold">
+                            Balance Received
+                        </label>
 
-                    @error('transportation')
-
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
-                </div>
-
-                {{-- From --}}
-                <div class="col-md-6">
-
-                    <label
-                        for="from"
-                        class="form-label"
-                    >
-                        From
-                        <span class="text-danger">*</span>
-                    </label>
-
-                    <input
-                        type="text"
-                        name="from"
-                        id="from"
-                        class="form-control @error('from') is-invalid @enderror"
-                        value="{{ old('from') }}"
-                        placeholder="e.g. Jakarta"
-                        required
-                    >
-
-                    @error('from')
-
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
+                        <input
+                            type="text"
+                            id="balance_received_display"
+                            class="form-control bg-light fw-bold"
+                            value="Rp 0"
+                            readonly
+                        >
+                    </div>
 
                 </div>
 
-                {{-- Destination --}}
-                <div class="col-md-6">
+            </div>
+        </div>
 
-                    <label
-                        for="destination"
-                        class="form-label"
-                    >
-                        Destination
-                        <span class="text-danger">*</span>
-                    </label>
 
-                    <input
-                        type="text"
-                        name="destination"
-                        id="destination"
-                        class="form-control @error('destination') is-invalid @enderror"
-                        value="{{ old('destination') }}"
-                        placeholder="e.g. Sumbawa Barat"
-                        required
-                    >
+        {{-- Purpose & Note --}}
+        <div class="card shadow-sm border-0 mb-4">
 
-                    @error('destination')
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-card-text me-2"></i>
+                    Purpose & Note
+                </h6>
+            </div>
 
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
+            <div class="card-body">
 
-                    @enderror
-
-                </div>
-
-                {{-- Date Departure --}}
-                <div class="col-md-4">
-
-                    <label
-                        for="date_departure"
-                        class="form-label"
-                    >
-                        Date Departure
-                        <span class="text-danger">*</span>
-                    </label>
-
-                    <input
-                        type="date"
-                        name="date_departure"
-                        id="date_departure"
-                        class="form-control @error('date_departure') is-invalid @enderror"
-                        value="{{ old('date_departure') }}"
-                        required
-                    >
-
-                    @error('date_departure')
-
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
-                </div>
-
-                {{-- Date Return --}}
-                <div class="col-md-4">
-
-                    <label
-                        for="date_return"
-                        class="form-label"
-                    >
-                        Date Return
-                        <span class="text-danger">*</span>
-                    </label>
-
-                    <input
-                        type="date"
-                        name="date_return"
-                        id="date_return"
-                        class="form-control @error('date_return') is-invalid @enderror"
-                        value="{{ old('date_return') }}"
-                        required
-                    >
-
-                    @error('date_return')
-
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
-                </div>
-
-                {{-- Total Days --}}
-                <div class="col-md-4">
-
-                    <label
-                        for="total_days_display"
-                        class="form-label"
-                    >
-                        Total Days
-                    </label>
-
-                    <input
-                        type="text"
-                        id="total_days_display"
-                        class="form-control bg-light"
-                        value="0"
-                        readonly
-                    >
-
-                </div>
-
-                {{-- Purpose --}}
-                <div class="col-md-12">
-
-                    <label
-                        for="purpose"
-                        class="form-label"
-                    >
-                        Purpose
-                        <span class="text-danger">*</span>
+                <div class="mb-3">
+                    <label for="purpose" class="form-label fw-semibold">
+                        Purpose <span class="text-danger">*</span>
                     </label>
 
                     <textarea
                         name="purpose"
                         id="purpose"
-                        rows="3"
+                        rows="4"
                         class="form-control @error('purpose') is-invalid @enderror"
-                        placeholder="Describe the purpose of this business trip..."
                         required
                     >{{ old('purpose') }}</textarea>
 
                     @error('purpose')
-
                         <div class="invalid-feedback">
                             {{ $message }}
                         </div>
-
                     @enderror
-
                 </div>
 
-                {{-- Note --}}
-                <div class="col-md-12">
-
-                    <label
-                        for="note"
-                        class="form-label"
-                    >
+                <div>
+                    <label for="note" class="form-label fw-semibold">
                         Note
                     </label>
 
                     <textarea
                         name="note"
                         id="note"
-                        rows="2"
+                        rows="3"
                         class="form-control @error('note') is-invalid @enderror"
-                        placeholder="Additional information..."
                     >{{ old('note') }}</textarea>
 
                     @error('note')
-
                         <div class="invalid-feedback">
                             {{ $message }}
                         </div>
-
                     @enderror
-
                 </div>
 
             </div>
+        </div>
+
+
+        {{-- Actions --}}
+        <div class="d-flex justify-content-end gap-2 mb-4">
+
+            <a href="{{ route('spds.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i>
+                Cancel
+            </a>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-1"></i>
+                Create SPD
+            </button>
 
         </div>
 
-    </div>
+    </form>
 
+</div>
 
-    {{-- ========================================================= --}}
-    {{-- Allowance & Payment --}}
-    {{-- ========================================================= --}}
-
-    <div class="card border-0 shadow-sm mb-4">
-
-        <div class="card-header bg-white py-3">
-
-            <h6 class="mb-0">
-                <i class="bi bi-cash-stack me-2"></i>
-                Allowance & Payment
-            </h6>
-
-        </div>
-
-        <div class="card-body">
-
-            <div class="row g-3">
-
-                {{-- Meals --}}
-                <div class="col-md-6">
-
-                    <label
-                        for="meals_per_day"
-                        class="form-label"
-                    >
-                        Meals / Day
-                        <span class="text-danger">*</span>
-                    </label>
-
-                    <input
-                        type="number"
-                        name="meals_per_day"
-                        id="meals_per_day"
-                        class="form-control bg-light @error('meals_per_day') is-invalid @enderror"
-                        value="0"
-                        min="0"
-                        step="0.01"
-                        readonly
-                    >
-
-                    <div class="form-text">
-                        Automatically determined from Employee Cost Level and Travel Type.
-                    </div>
-
-                    @error('meals_per_day')
-
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
-                </div>
-
-                {{-- Allowance --}}
-                <div class="col-md-6">
-
-                    <label
-                        for="allowance_per_day"
-                        class="form-label"
-                    >
-                        Allowance / Day
-                        <span class="text-danger">*</span>
-                    </label>
-
-                    <input
-                        type="number"
-                        name="allowance_per_day"
-                        id="allowance_per_day"
-                        class="form-control bg-light @error('allowance_per_day') is-invalid @enderror"
-                        value="0"
-                        min="0"
-                        step="0.01"
-                        readonly
-                    >
-
-                    <div class="form-text">
-                        Automatically determined from Employee Cost Level and Travel Type.
-                    </div>
-
-                    @error('allowance_per_day')
-
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
-                </div>
-
-                {{-- Local Transport --}}
-                <div class="col-md-6">
-
-                    <label
-                        for="local_transport"
-                        class="form-label"
-                    >
-                        Local Transport
-                    </label>
-
-                    <input
-                        type="number"
-                        name="local_transport"
-                        id="local_transport"
-                        class="form-control @error('local_transport') is-invalid @enderror"
-                        value="{{ old('local_transport', 0) }}"
-                        min="0"
-                        step="0.01"
-                    >
-
-                    @error('local_transport')
-
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
-                </div>
-
-                {{-- Contingencies --}}
-                <div class="col-md-6">
-
-                    <label
-                        for="contingencies"
-                        class="form-label"
-                    >
-                        Contingencies
-                    </label>
-
-                    <input
-                        type="number"
-                        name="contingencies"
-                        id="contingencies"
-                        class="form-control @error('contingencies') is-invalid @enderror"
-                        value="{{ old('contingencies', 0) }}"
-                        min="0"
-                        step="0.01"
-                    >
-
-                    @error('contingencies')
-
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
-                </div>
-
-                {{-- Advance Payment --}}
-                <div class="col-md-6">
-
-                    <label
-                        for="advance_payment"
-                        class="form-label"
-                    >
-                        Advance Payment
-                        <span class="text-danger">*</span>
-                    </label>
-
-                    <select
-                        name="advance_payment"
-                        id="advance_payment"
-                        class="form-select @error('advance_payment') is-invalid @enderror"
-                        required
-                    >
-
-                        <option value="">
-                            Select
-                        </option>
-
-                        <option
-                            value="1"
-                            @selected(old('advance_payment') === '1')
-                        >
-                            Yes
-                        </option>
-
-                        <option
-                            value="0"
-                            @selected(old('advance_payment') === '0')
-                        >
-                            No
-                        </option>
-
-                    </select>
-
-                    @error('advance_payment')
-
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
-                </div>
-
-                {{-- Balance Received --}}
-                <div class="col-md-6">
-
-                    <label class="form-label">
-                        Balance Received
-                    </label>
-
-                    <input
-                        type="text"
-                        id="balance_received_display"
-                        class="form-control bg-light fw-semibold"
-                        value="0.00"
-                        readonly
-                    >
-
-                    <div class="form-text">
-                        Calculated automatically.
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    {{-- ========================================================= --}}
-    {{-- Actions --}}
-    {{-- ========================================================= --}}
-
-    <div class="d-flex justify-content-end gap-2">
-
-        <a
-            href="{{ route('spds.index') }}"
-            class="btn btn-outline-secondary"
-        >
-            Cancel
-        </a>
-
-        <button
-            type="submit"
-            class="btn btn-primary"
-        >
-            <i class="bi bi-check-lg me-1"></i>
-            Create SPD
-        </button>
-
-    </div>
-
-</form>
-
-
-{{-- ============================================================= --}}
-{{-- JavaScript --}}
-{{-- ============================================================= --}}
-
-@push('scripts')
 
 <script>
-
 document.addEventListener('DOMContentLoaded', function () {
 
-    const employeeSelect =
-        document.getElementById('employee_id');
-
-    const travelTypeSelect =
-        document.getElementById('travel_type');
+    const employeeSelect = document.getElementById('employee_id');
+    const projectSelect = document.getElementById('project_id');
 
     const managerDisplay =
         document.getElementById('manager_display');
@@ -824,8 +677,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const spdLimitDisplay =
         document.getElementById('spd_limit_display');
 
-    const projectDisplay =
-        document.getElementById('project_display');
+    const costLevelDisplay =
+        document.getElementById('cost_level_display');
+
+    const employeeProjectDisplay =
+        document.getElementById('employee_project_display');
 
     const costCenterDisplay =
         document.getElementById('cost_center_display');
@@ -833,8 +689,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const costControlDisplay =
         document.getElementById('cost_control_display');
 
-    const costLevelDisplay =
-        document.getElementById('cost_level_display');
+    const projectLocationDisplay =
+        document.getElementById('project_location_display');
+
+    const travelTypeSelect =
+        document.getElementById('travel_type');
 
     const dateDeparture =
         document.getElementById('date_departure');
@@ -845,11 +704,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalDaysDisplay =
         document.getElementById('total_days_display');
 
-    const mealsPerDay =
-        document.getElementById('meals_per_day');
+    const mealsPerDayDisplay =
+        document.getElementById('meals_per_day_display');
 
-    const allowancePerDay =
-        document.getElementById('allowance_per_day');
+    const allowancePerDayDisplay =
+        document.getElementById('allowance_per_day_display');
 
     const localTransport =
         document.getElementById('local_transport');
@@ -857,87 +716,94 @@ document.addEventListener('DOMContentLoaded', function () {
     const contingencies =
         document.getElementById('contingencies');
 
+    const totalMealsDisplay =
+        document.getElementById('total_meals_display');
+
+    const totalAllowanceDisplay =
+        document.getElementById('total_allowance_display');
+
     const balanceReceivedDisplay =
         document.getElementById('balance_received_display');
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Format Number
-    |--------------------------------------------------------------------------
-    */
-
-    function formatNumber(value) {
-
-        return new Intl.NumberFormat('id-ID', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(value);
-
+    function formatCurrency(value) {
+        return 'Rp ' + Number(value || 0).toLocaleString(
+            'id-ID',
+            {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            }
+        );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Employee Information
-    |--------------------------------------------------------------------------
-    */
 
     function updateEmployeeInformation() {
 
         const selectedOption =
-            employeeSelect.options[
-                employeeSelect.selectedIndex
-            ];
+            employeeSelect.options[employeeSelect.selectedIndex];
 
-        if (
-            !selectedOption ||
-            !selectedOption.value
-        ) {
+        if (!selectedOption || !selectedOption.value) {
 
             managerDisplay.value = '';
             spdLimitDisplay.value = '';
-            projectDisplay.value = '';
-            costCenterDisplay.value = '';
-            costControlDisplay.value = '';
             costLevelDisplay.value = '';
+            employeeProjectDisplay.value = '';
 
-            mealsPerDay.value = '0';
-            allowancePerDay.value = '0';
-
-            updateBalance();
+            updateRates();
 
             return;
         }
 
         managerDisplay.value =
-            selectedOption.dataset.manager || '';
+            selectedOption.dataset.manager || 'Not assigned';
 
         spdLimitDisplay.value =
-            selectedOption.dataset.spdLimit || '0';
-
-        projectDisplay.value =
-            selectedOption.dataset.project || '';
-
-        costCenterDisplay.value =
-            selectedOption.dataset.costCenter || '';
-
-        costControlDisplay.value =
-            selectedOption.dataset.costControl || '';
+            selectedOption.dataset.spdLimit || '0.00';
 
         costLevelDisplay.value =
-            selectedOption.dataset.costLevel || '';
+            selectedOption.dataset.costLevel || 'Not assigned';
+
+        /*
+         * Employee master project is DISPLAY ONLY.
+         *
+         * IMPORTANT:
+         * It must NOT change the SPD Project selection.
+         *
+         * The SPD Project is independently selected by HRD
+         * because the business trip can be charged to another
+         * project.
+         */
+        employeeProjectDisplay.value =
+            'Employee master project is stored separately';
 
         updateRates();
-
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Cost Level Rates
-    |--------------------------------------------------------------------------
-    */
+    function updateProjectInformation() {
+
+        const selectedOption =
+            projectSelect.options[projectSelect.selectedIndex];
+
+        if (!selectedOption || !selectedOption.value) {
+
+            costCenterDisplay.value = '';
+            costControlDisplay.value = '';
+            projectLocationDisplay.value = '';
+
+            return;
+        }
+
+        costCenterDisplay.value =
+            selectedOption.dataset.costCenter || 'Not assigned';
+
+        costControlDisplay.value =
+            selectedOption.dataset.costControl || 'Not assigned';
+
+        projectLocationDisplay.value =
+            selectedOption.dataset.location || 'Not assigned';
+    }
+
 
     function updateRates() {
 
@@ -946,15 +812,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 employeeSelect.selectedIndex
             ];
 
-        if (
-            !selectedEmployee ||
-            !selectedEmployee.value
-        ) {
+        if (!selectedEmployee || !selectedEmployee.value) {
 
-            mealsPerDay.value = '0';
-            allowancePerDay.value = '0';
+            mealsPerDayDisplay.value = 'Rp 0';
+            allowancePerDayDisplay.value = 'Rp 0';
 
-            updateBalance();
+            updateTotals();
 
             return;
         }
@@ -962,95 +825,66 @@ document.addEventListener('DOMContentLoaded', function () {
         const travelType =
             travelTypeSelect.value;
 
-        if (!travelType) {
-
-            mealsPerDay.value = '0';
-            allowancePerDay.value = '0';
-
-            updateBalance();
-
-            return;
-        }
-
         let meals = 0;
         let allowance = 0;
 
         if (travelType === 'domestic') {
 
             meals =
-                parseFloat(
-                    selectedEmployee.dataset.mealsDomestic
-                ) || 0;
+                Number(
+                    selectedEmployee.dataset.mealsDomestic || 0
+                );
 
             allowance =
-                parseFloat(
-                    selectedEmployee.dataset.allowanceDomestic
-                ) || 0;
+                Number(
+                    selectedEmployee.dataset.allowanceDomestic || 0
+                );
 
-        }
-
-        if (travelType === 'international') {
+        } else if (travelType === 'international') {
 
             meals =
-                parseFloat(
-                    selectedEmployee.dataset.mealsInternational
-                ) || 0;
+                Number(
+                    selectedEmployee.dataset.mealsInternational || 0
+                );
 
             allowance =
-                parseFloat(
-                    selectedEmployee.dataset.allowanceInternational
-                ) || 0;
-
+                Number(
+                    selectedEmployee.dataset.allowanceInternational || 0
+                );
         }
 
-        mealsPerDay.value =
-            meals.toFixed(2);
+        mealsPerDayDisplay.value =
+            formatCurrency(meals);
 
-        allowancePerDay.value =
-            allowance.toFixed(2);
+        allowancePerDayDisplay.value =
+            formatCurrency(allowance);
 
-        updateBalance();
-
+        updateTotals();
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Total Days
-    |--------------------------------------------------------------------------
-    */
-
-    function updateTotalDays() {
+    function calculateTotalDays() {
 
         if (
             !dateDeparture.value ||
             !dateReturn.value
         ) {
-
             totalDaysDisplay.value = '0';
-
-            updateBalance();
-
-            return;
+            return 0;
         }
 
         const departure =
-            new Date(
-                dateDeparture.value + 'T00:00:00'
-            );
+            new Date(dateDeparture.value);
 
         const returnDate =
-            new Date(
-                dateReturn.value + 'T00:00:00'
-            );
+            new Date(dateReturn.value);
 
-        if (returnDate < departure) {
-
+        if (
+            Number.isNaN(departure.getTime()) ||
+            Number.isNaN(returnDate.getTime())
+        ) {
             totalDaysDisplay.value = '0';
-
-            updateBalance();
-
-            return;
+            return 0;
         }
 
         const difference =
@@ -1063,72 +897,121 @@ document.addEventListener('DOMContentLoaded', function () {
                 (1000 * 60 * 60 * 24)
             ) + 1;
 
+        if (totalDays < 1) {
+            totalDaysDisplay.value = '0';
+            return 0;
+        }
+
         totalDaysDisplay.value =
-            totalDays;
+            totalDays.toString();
 
-        updateBalance();
-
+        return totalDays;
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Balance Received
-    |--------------------------------------------------------------------------
-    */
-
-    function updateBalance() {
+    function updateTotals() {
 
         const totalDays =
-            parseFloat(
-                totalDaysDisplay.value
-            ) || 0;
+            calculateTotalDays();
 
-        const meals =
-            parseFloat(
-                mealsPerDay.value
-            ) || 0;
+        const selectedEmployee =
+            employeeSelect.options[
+                employeeSelect.selectedIndex
+            ];
 
-        const allowance =
-            parseFloat(
-                allowancePerDay.value
-            ) || 0;
+        if (
+            !selectedEmployee ||
+            !selectedEmployee.value ||
+            totalDays <= 0
+        ) {
+            totalMealsDisplay.value = 'Rp 0';
+            totalAllowanceDisplay.value = 'Rp 0';
+            balanceReceivedDisplay.value = 'Rp 0';
 
-        const local =
-            parseFloat(
-                localTransport.value
-            ) || 0;
+            return;
+        }
 
-        const contingency =
-            parseFloat(
-                contingencies.value
-            ) || 0;
+        const travelType =
+            travelTypeSelect.value;
 
-        const balance =
-            (meals * totalDays)
-            +
-            (allowance * totalDays)
-            +
-            local
-            +
-            contingency;
+        let meals = 0;
+        let allowance = 0;
+
+        if (travelType === 'domestic') {
+
+            meals =
+                Number(
+                    selectedEmployee.dataset.mealsDomestic || 0
+                );
+
+            allowance =
+                Number(
+                    selectedEmployee.dataset.allowanceDomestic || 0
+                );
+
+        } else if (travelType === 'international') {
+
+            meals =
+                Number(
+                    selectedEmployee.dataset.mealsInternational || 0
+                );
+
+            allowance =
+                Number(
+                    selectedEmployee.dataset.allowanceInternational || 0
+                );
+        }
+
+        const totalMeals =
+            meals * totalDays;
+
+        const totalAllowance =
+            allowance * totalDays;
+
+        const localTransportValue =
+            Number(localTransport.value || 0);
+
+        const contingenciesValue =
+            Number(contingencies.value || 0);
+
+        const balanceReceived =
+            totalMeals +
+            totalAllowance +
+            localTransportValue +
+            contingenciesValue;
+
+        totalMealsDisplay.value =
+            formatCurrency(totalMeals);
+
+        totalAllowanceDisplay.value =
+            formatCurrency(totalAllowance);
 
         balanceReceivedDisplay.value =
-            formatNumber(balance);
-
+            formatCurrency(balanceReceived);
     }
 
 
     /*
-    |--------------------------------------------------------------------------
-    | Events
-    |--------------------------------------------------------------------------
-    */
-
+     * Employee changes:
+     * Update employee-related information only.
+     *
+     * Do NOT change projectSelect.value here.
+     */
     employeeSelect.addEventListener(
         'change',
         updateEmployeeInformation
     );
+
+
+    /*
+     * Project changes:
+     * Update Cost Center, Cost Control and Project Location.
+     */
+    projectSelect.addEventListener(
+        'change',
+        updateProjectInformation
+    );
+
 
     travelTypeSelect.addEventListener(
         'change',
@@ -1137,41 +1020,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
     dateDeparture.addEventListener(
         'change',
-        updateTotalDays
+        updateTotals
     );
 
     dateReturn.addEventListener(
         'change',
-        updateTotalDays
+        updateTotals
     );
 
     localTransport.addEventListener(
         'input',
-        updateBalance
+        updateTotals
     );
 
     contingencies.addEventListener(
         'input',
-        updateBalance
+        updateTotals
     );
 
 
     /*
-    |--------------------------------------------------------------------------
-    | Initial State
-    |--------------------------------------------------------------------------
-    */
-
+     * Initial page load.
+     *
+     * This is important when validation fails and Laravel
+     * sends the user back with old('employee_id') and
+     * old('project_id').
+     */
     updateEmployeeInformation();
-
+    updateProjectInformation();
     updateRates();
 
-    updateTotalDays();
-
 });
-
 </script>
-
-@endpush
 
 @endsection

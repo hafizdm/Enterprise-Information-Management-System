@@ -85,6 +85,11 @@ class Employee extends Model
         return $this->hasMany(Spd::class, 'employee_id');
     }
 
+    public function spdReports(): HasMany
+    {
+        return $this->hasMany(SpdReport::class, 'employee_id');
+    }
+
     public function managedSpds(): HasMany
     {
         return $this->hasMany(Spd::class, 'manager_id');

@@ -51,6 +51,13 @@ class RolePermissionSeeder extends Seeder
             'spd.view-any',
             'spd.delete',
 
+            // SPD Report
+            'spd-report.view-own',
+            'spd-report.create',
+            'spd-report.view-approval',
+            'spd-report.approve',
+            'spd-report.reject',
+
             // Cost Level
             'cost-level.view',
             'cost-level.create',
@@ -67,7 +74,7 @@ class RolePermissionSeeder extends Seeder
             'rfp.create',
             'rfp.approve',
 
-           // Leave
+            // Leave
             'leave.view-own',
             'leave.view-any',
             'leave.create',
@@ -125,6 +132,9 @@ class RolePermissionSeeder extends Seeder
 
                 'spd.view-own',
 
+                'spd-report.view-own',
+                'spd-report.create',
+
                 'ca.view-own',
                 'ca.create',
 
@@ -142,6 +152,10 @@ class RolePermissionSeeder extends Seeder
 
                 'spd.view-own',
                 'spd.approve',
+
+                'spd-report.view-approval',
+                'spd-report.approve',
+                'spd-report.reject',
 
                 'ca.approve',
 
@@ -175,7 +189,6 @@ class RolePermissionSeeder extends Seeder
                 'employee.create',
                 'employee.update-any',
                 'employee.delete',
-
 
                 'spd.view-any',
                 'spd.create',
@@ -220,3 +233,4 @@ class RolePermissionSeeder extends Seeder
         }
     }
 }
+
