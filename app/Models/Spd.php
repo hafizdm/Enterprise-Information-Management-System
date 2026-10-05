@@ -37,6 +37,11 @@ class Spd extends Model
         'document_approved_at',
         'document_rejection_reason',
         'created_by',
+
+        // SPD Document Numbering
+        'spd_number',
+        'document_year',
+        'document_sequence',
     ];
 
     protected function casts(): array
@@ -52,6 +57,10 @@ class Spd extends Model
             'advance_payment' => 'boolean',
             'manager_approved_at' => 'datetime',
             'document_approved_at' => 'datetime',
+
+            // SPD Document Numbering
+            'document_year' => 'integer',
+            'document_sequence' => 'integer',
         ];
     }
 

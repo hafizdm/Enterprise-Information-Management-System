@@ -6,11 +6,13 @@
 
     {{-- Page Header --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+
         <div>
             <h4 class="fw-bold mb-1">
                 <i class="bi bi-file-earmark-text me-2"></i>
                 Create SPD Report
             </h4>
+
             <p class="text-muted mb-0">
                 Submit your actual business trip expenses and supporting evidence.
             </p>
@@ -19,36 +21,56 @@
         <div>
             <a href="{{ route('spd-reports.index') }}"
                class="btn btn-outline-secondary">
+
                 <i class="bi bi-arrow-left me-1"></i>
                 Back to My SPD Reports
+
             </a>
         </div>
+
     </div>
+
 
     {{-- Validation Errors --}}
     @if ($errors->any())
+
         <div class="alert alert-danger shadow-sm border-0">
+
             <div class="fw-semibold mb-2">
+
                 <i class="bi bi-exclamation-triangle me-1"></i>
                 Please correct the following errors:
+
             </div>
 
             <ul class="mb-0 ps-3">
+
                 @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
+
+                    <li>
+                        {{ $error }}
+                    </li>
+
                 @endforeach
+
             </ul>
+
         </div>
+
     @endif
+
 
     {{-- No Eligible SPD --}}
     @if ($spds->isEmpty())
 
         <div class="card border-0 shadow-sm">
+
             <div class="card-body text-center py-5">
 
                 <div class="mb-3">
+
                     <i class="bi bi-info-circle display-4 text-muted"></i>
+
                 </div>
 
                 <h5 class="fw-bold">
@@ -56,18 +78,23 @@
                 </h5>
 
                 <p class="text-muted mb-4">
+
                     You currently have no approved SPD available for reporting.
                     Only SPD requests that have completed the approval process
                     can be submitted as an SPD Report.
+
                 </p>
 
                 <a href="{{ route('spd-reports.index') }}"
                    class="btn btn-primary">
+
                     <i class="bi bi-arrow-left me-1"></i>
                     Back to My SPD Reports
+
                 </a>
 
             </div>
+
         </div>
 
     @else
@@ -79,21 +106,30 @@
 
             @csrf
 
+
             {{-- ====================================================== --}}
             {{-- SECTION 1 : SELECT SPD --}}
             {{-- ====================================================== --}}
+
             <div class="card border-0 shadow-sm mb-4">
 
                 <div class="card-header bg-white border-bottom py-3">
+
                     <h6 class="fw-bold mb-1">
+
                         <i class="bi bi-file-earmark-check me-2"></i>
                         Select SPD
+
                     </h6>
 
                     <small class="text-muted">
+
                         Select an approved SPD to create or resubmit its expense report.
+
                     </small>
+
                 </div>
+
 
                 <div class="card-body">
 
@@ -103,9 +139,12 @@
 
                             <label for="spd_id"
                                    class="form-label fw-semibold">
+
                                 SPD Number
                                 <span class="text-danger">*</span>
+
                             </label>
+
 
                             <select name="spd_id"
                                     id="spd_id"
@@ -116,25 +155,35 @@
                                     -- Select SPD --
                                 </option>
 
+
                                 @foreach ($spds as $spd)
 
                                     @php
+
                                         $isRejected =
                                             $spd->report &&
                                             $spd->report->status_report === 'rejected';
+
                                     @endphp
 
-                                    <option value="{{ $spd->id }}"
-                                        {{ old('spd_id') == $spd->id ? 'selected' : '' }}>
 
-                                        SPD #{{ $spd->id }}
+                                    <option
+                                        value="{{ $spd->id }}"
+                                        {{ old('spd_id') == $spd->id ? 'selected' : '' }}
+                                    >
+
+                                        {{ $spd->spd_number }}
+
                                         —
                                         {{ $spd->project?->name ?? 'No Project' }}
+
                                         —
                                         {{ $spd->destination }}
 
                                         @if ($isRejected)
+
                                             — REJECTED / RESUBMIT
+
                                         @endif
 
                                     </option>
@@ -143,15 +192,21 @@
 
                             </select>
 
+
                             @error('spd_id')
+
                                 <div class="invalid-feedback">
                                     {{ $message }}
                                 </div>
+
                             @enderror
 
+
                             <div class="form-text">
+
                                 Approved SPDs without a report and rejected SPD Reports
                                 are available for submission.
+
                             </div>
 
                         </div>
@@ -159,12 +214,14 @@
                     </div>
 
                 </div>
+
             </div>
 
 
             {{-- ====================================================== --}}
             {{-- SECTION : REJECTION INFORMATION --}}
             {{-- ====================================================== --}}
+
             <div id="rejectionInformation"
                  class="alert alert-warning border-0 shadow-sm mb-4 d-none">
 
@@ -179,8 +236,10 @@
                         </div>
 
                         <div class="small mb-2">
+
                             This SPD Report was rejected by the Manager.
                             Please correct the report and submit it again.
+
                         </div>
 
                         <div class="small fw-semibold">
@@ -202,22 +261,28 @@
             {{-- ====================================================== --}}
             {{-- SECTION 2 : ORIGINAL SPD INFORMATION --}}
             {{-- ====================================================== --}}
+
             <div id="spdInformation"
                  class="card border-0 shadow-sm mb-4 d-none">
 
                 <div class="card-header bg-white border-bottom py-3">
 
                     <h6 class="fw-bold mb-1">
+
                         <i class="bi bi-file-earmark-check me-2"></i>
                         Original SPD Information
+
                     </h6>
 
                     <small class="text-muted">
+
                         The following information comes directly from the
                         approved SPD and cannot be modified.
+
                     </small>
 
                 </div>
+
 
                 <div class="card-body">
 
@@ -228,32 +293,45 @@
                             General Information
                         </div>
 
+
                         <div class="row g-4">
 
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     SPD Number
                                 </label>
 
-                                <div id="spdNumber" class="fw-bold">
+                                <div id="spdNumber"
+                                     class="fw-bold text-primary">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     SPD Status
                                 </label>
 
                                 <div>
+
                                     <span id="spdStatus"
                                           class="badge text-bg-success">
+
                                         Approved
+
                                     </span>
+
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Employee
                                 </label>
@@ -262,9 +340,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Project
                                 </label>
@@ -273,9 +354,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Cost Center
                                 </label>
@@ -284,9 +368,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Manager
                                 </label>
@@ -295,9 +382,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Approval Document / PIC
                                 </label>
@@ -306,6 +396,7 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
                         </div>
@@ -323,9 +414,11 @@
                             Travel Information
                         </div>
 
+
                         <div class="row g-4">
 
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Travel Type
                                 </label>
@@ -334,9 +427,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Transportation
                                 </label>
@@ -345,9 +441,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     From
                                 </label>
@@ -356,9 +455,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Destination
                                 </label>
@@ -367,9 +469,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     SPD Date Departure
                                 </label>
@@ -378,9 +483,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     SPD Date Return
                                 </label>
@@ -389,9 +497,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     SPD Total Days
                                 </label>
@@ -400,9 +511,12 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Advance Payment
                                 </label>
@@ -411,6 +525,7 @@
                                      class="fw-semibold">
                                     -
                                 </div>
+
                             </div>
 
                         </div>
@@ -428,9 +543,11 @@
                             Approved Financial Information
                         </div>
 
+
                         <div class="row g-4">
 
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Meals per Day
                                 </label>
@@ -439,9 +556,12 @@
                                      class="fw-semibold">
                                     Rp 0
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Allowance per Day
                                 </label>
@@ -450,9 +570,12 @@
                                      class="fw-semibold">
                                     Rp 0
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Local Transport
                                 </label>
@@ -461,9 +584,12 @@
                                      class="fw-semibold">
                                     Rp 0
                                 </div>
+
                             </div>
 
+
                             <div class="col-md-6">
+
                                 <label class="form-label text-muted small mb-1">
                                     Contingencies
                                 </label>
@@ -472,7 +598,9 @@
                                      class="fw-semibold">
                                     Rp 0
                                 </div>
+
                             </div>
+
 
                             <div class="col-12">
 
@@ -506,6 +634,7 @@
                             Business Trip Details
                         </div>
 
+
                         <div class="row g-4">
 
                             <div class="col-12">
@@ -520,6 +649,7 @@
                                 </div>
 
                             </div>
+
 
                             <div class="col-12">
 
@@ -539,28 +669,35 @@
                     </div>
 
                 </div>
+
             </div>
 
 
             {{-- ====================================================== --}}
             {{-- SECTION 3 : ACTUAL TRAVEL & EXPENSE --}}
             {{-- ====================================================== --}}
+
             <div class="card border-0 shadow-sm mb-4">
 
                 <div class="card-header bg-white border-bottom py-3">
 
                     <h6 class="fw-bold mb-1">
+
                         <i class="bi bi-calendar-check me-2"></i>
                         Actual Travel &amp; Expenses
+
                     </h6>
 
                     <small class="text-muted">
+
                         Enter the actual travel dates and actual expenses.
                         Meals and allowance rates are automatically determined
                         from the employee's Cost Level.
+
                     </small>
 
                 </div>
+
 
                 <div class="card-body">
 
@@ -571,8 +708,10 @@
 
                             <label for="date_departure"
                                    class="form-label fw-semibold">
+
                                 Actual Date Departure
                                 <span class="text-danger">*</span>
+
                             </label>
 
                             <input type="date"
@@ -582,10 +721,13 @@
                                    class="form-control @error('date_departure') is-invalid @enderror"
                                    required>
 
+
                             @error('date_departure')
+
                                 <div class="invalid-feedback">
                                     {{ $message }}
                                 </div>
+
                             @enderror
 
                         </div>
@@ -596,8 +738,10 @@
 
                             <label for="date_return"
                                    class="form-label fw-semibold">
+
                                 Actual Date Return
                                 <span class="text-danger">*</span>
+
                             </label>
 
                             <input type="date"
@@ -607,10 +751,13 @@
                                    class="form-control @error('date_return') is-invalid @enderror"
                                    required>
 
+
                             @error('date_return')
+
                                 <div class="invalid-feedback">
                                     {{ $message }}
                                 </div>
+
                             @enderror
 
                         </div>
@@ -667,8 +814,10 @@
                             </div>
 
                             <div class="form-text">
+
                                 Automatically determined from the employee's
                                 Cost Level and SPD Travel Type.
+
                             </div>
 
                         </div>
@@ -696,8 +845,10 @@
                             </div>
 
                             <div class="form-text">
+
                                 Automatically determined from the employee's
                                 Cost Level and SPD Travel Type.
+
                             </div>
 
                         </div>
@@ -754,7 +905,9 @@
 
                             <label for="local_transport"
                                    class="form-label fw-semibold">
+
                                 Actual Local Transport
+
                             </label>
 
                             <div class="input-group">
@@ -773,10 +926,13 @@
 
                             </div>
 
+
                             @error('local_transport')
+
                                 <div class="text-danger small mt-1">
                                     {{ $message }}
                                 </div>
+
                             @enderror
 
                         </div>
@@ -787,7 +943,9 @@
 
                             <label for="contingencies"
                                    class="form-label fw-semibold">
+
                                 Actual Contingencies
+
                             </label>
 
                             <div class="input-group">
@@ -806,10 +964,13 @@
 
                             </div>
 
+
                             @error('contingencies')
+
                                 <div class="text-danger small mt-1">
                                     {{ $message }}
                                 </div>
+
                             @enderror
 
                         </div>
@@ -817,34 +978,43 @@
                     </div>
 
                 </div>
+
             </div>
 
 
             {{-- ====================================================== --}}
             {{-- SECTION 4 : EXPENSE EVIDENCE --}}
             {{-- ====================================================== --}}
+
             <div class="card border-0 shadow-sm mb-4">
 
                 <div class="card-header bg-white border-bottom py-3">
 
                     <h6 class="fw-bold mb-1">
+
                         <i class="bi bi-paperclip me-2"></i>
                         Expense Evidence
+
                     </h6>
 
                     <small class="text-muted">
+
                         Upload one combined file containing all receipts,
                         bills, tickets, and supporting documents.
+
                     </small>
 
                 </div>
+
 
                 <div class="card-body">
 
                     <label for="expense_evidence"
                            class="form-label fw-semibold">
+
                         Evidence File
                         <span class="text-danger">*</span>
+
                     </label>
 
                     <input type="file"
@@ -854,34 +1024,45 @@
                            accept=".pdf,.jpg,.jpeg,.png"
                            required>
 
+
                     @error('expense_evidence')
+
                         <div class="invalid-feedback">
                             {{ $message }}
                         </div>
+
                     @enderror
 
+
                     <div class="form-text">
+
                         Allowed formats: PDF, JPG, JPEG, PNG.
                         Maximum size: 10 MB.
+
                     </div>
 
                 </div>
+
             </div>
 
 
             {{-- ====================================================== --}}
             {{-- SECTION 5 : REPORT NOTE --}}
             {{-- ====================================================== --}}
+
             <div class="card border-0 shadow-sm mb-4">
 
                 <div class="card-header bg-white border-bottom py-3">
 
                     <h6 class="fw-bold mb-0">
+
                         <i class="bi bi-chat-left-text me-2"></i>
                         Report Note
+
                     </h6>
 
                 </div>
+
 
                 <div class="card-body">
 
@@ -891,29 +1072,37 @@
                               class="form-control @error('note') is-invalid @enderror"
                               placeholder="Add any additional information about this SPD report...">{{ old('note') }}</textarea>
 
+
                     @error('note')
+
                         <div class="invalid-feedback">
                             {{ $message }}
                         </div>
+
                     @enderror
 
                 </div>
+
             </div>
 
 
             {{-- ====================================================== --}}
             {{-- SECTION 6 : CALCULATION SUMMARY --}}
             {{-- ====================================================== --}}
+
             <div class="card border-0 shadow-sm mb-4">
 
                 <div class="card-header bg-white border-bottom py-3">
 
                     <h6 class="fw-bold mb-0">
+
                         <i class="bi bi-calculator me-2"></i>
                         Expense Calculation
+
                     </h6>
 
                 </div>
+
 
                 <div class="card-body">
 
@@ -993,7 +1182,9 @@
 
                                         <div id="settlementLabel"
                                              class="fw-bold">
+
                                             Select an SPD and enter actual expenses.
+
                                         </div>
 
                                     </div>
@@ -1028,12 +1219,14 @@
                     </div>
 
                 </div>
+
             </div>
 
 
             {{-- ====================================================== --}}
             {{-- SECTION 7 : SUBMIT --}}
             {{-- ====================================================== --}}
+
             <div class="card border-0 shadow-sm mb-5">
 
                 <div class="card-body">
@@ -1047,13 +1240,17 @@
 
                             <div id="submitTitle"
                                  class="fw-semibold">
+
                                 Ready to submit?
+
                             </div>
 
                             <div id="submitDescription"
                                  class="small text-muted">
+
                                 Make sure the actual expenses and evidence
                                 are correct before submitting.
+
                             </div>
 
                         </div>
@@ -1075,6 +1272,7 @@
                                     class="btn btn-primary">
 
                                 <i class="bi bi-send me-1"></i>
+
                                 <span id="submitButtonText">
                                     Submit SPD Report
                                 </span>
@@ -1086,6 +1284,7 @@
                     </div>
 
                 </div>
+
             </div>
 
         </form>
@@ -1106,81 +1305,114 @@ $spdData = $spds->mapWithKeys(function ($spd) {
     $report = $spd->report;
 
     return [
+
         $spd->id => [
 
             'id' => $spd->id,
 
+            /*
+            |--------------------------------------------------------------------------
+            | Formal SPD Number
+            |--------------------------------------------------------------------------
+            */
+
+            'spd_number' =>
+                $spd->spd_number ?? '-',
+
+
             'employee' =>
                 $spd->employee?->full_name ?? '-',
+
 
             'project' =>
                 $spd->project?->name ?? '-',
 
+
             'cost_center' =>
                 $spd->project?->cost_center ?? '-',
+
 
             'manager' =>
                 $spd->manager?->full_name ?? '-',
 
+
             'approval_document' =>
                 $spd->approvalDocument?->full_name ?? '-',
+
 
             'travel_type' =>
                 $spd->travel_type
                     ? ucfirst($spd->travel_type)
                     : '-',
 
+
             'travel_type_raw' =>
                 $spd->travel_type ?? 'domestic',
+
 
             'from' =>
                 $spd->from ?? '-',
 
+
             'destination' =>
                 $spd->destination ?? '-',
+
 
             'date_departure' =>
                 $spd->date_departure?->format('d M Y') ?? '-',
 
+
             'date_return' =>
                 $spd->date_return?->format('d M Y') ?? '-',
+
 
             'total_days' =>
                 $spd->total_days ?? 0,
 
+
             'meals_per_day' =>
                 (float) $spd->meals_per_day,
+
 
             'allowance_per_day' =>
                 (float) $spd->allowance_per_day,
 
+
             'local_transport' =>
                 (float) $spd->local_transport,
+
 
             'contingencies' =>
                 (float) $spd->contingencies,
 
+
             'balance_received' =>
                 (float) $spd->balance_received,
+
 
             'transportation' =>
                 $spd->transportation
                     ? ucfirst($spd->transportation)
                     : '-',
 
+
             'advance_payment' =>
                 $spd->advance_payment
                     ? 'Yes'
                     : 'No',
 
+
             'purpose' =>
                 $spd->purpose ?? '-',
+
 
             'note' =>
                 $spd->note ?? '-',
 
+
             'status' =>
                 $spd->status ?? '-',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -1191,32 +1423,42 @@ $spdData = $spds->mapWithKeys(function ($spd) {
             'report_id' =>
                 $report?->id,
 
+
             'report_status' =>
                 $report?->status_report,
+
 
             'report_date_departure' =>
                 $report?->date_departure?->format('Y-m-d'),
 
+
             'report_date_return' =>
                 $report?->date_return?->format('Y-m-d'),
+
 
             'report_local_transport' =>
                 $report
                     ? (float) $report->local_transport
                     : 0,
 
+
             'report_contingencies' =>
                 $report
                     ? (float) $report->contingencies
                     : 0,
 
+
             'report_note' =>
                 $report?->note ?? '',
 
+
             'manager_rejection_reason' =>
                 $report?->manager_rejection_reason ?? '',
+
         ],
+
     ];
+
 });
 
 @endphp
@@ -1392,10 +1634,12 @@ $spdData = $spds->mapWithKeys(function ($spd) {
     function formatCurrency(value)
     {
         return new Intl.NumberFormat('id-ID', {
+
             style: 'currency',
             currency: 'IDR',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
+
         }).format(value || 0);
     }
 
@@ -1416,23 +1660,30 @@ $spdData = $spds->mapWithKeys(function ($spd) {
             return 0;
         }
 
+
         if (
             !dateDeparture.value ||
             !dateReturn.value
         ) {
-            actualDays.textContent = '0 day';
+
+            actualDays.textContent =
+                '0 day';
+
             return 0;
         }
+
 
         const departure =
             new Date(
                 dateDeparture.value + 'T00:00:00'
             );
 
+
         const returnDate =
             new Date(
                 dateReturn.value + 'T00:00:00'
             );
+
 
         const difference =
             Math.round(
@@ -1440,6 +1691,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 /
                 (1000 * 60 * 60 * 24)
             ) + 1;
+
 
         if (difference <= 0) {
 
@@ -1449,6 +1701,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
             return 0;
         }
 
+
         actualDays.textContent =
             difference +
             (
@@ -1456,6 +1709,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                     ? ' day'
                     : ' days'
             );
+
 
         return difference;
     }
@@ -1473,37 +1727,45 @@ $spdData = $spds->mapWithKeys(function ($spd) {
             return;
         }
 
+
         const days =
             calculateActualDays();
+
 
         const meals =
             parseFloat(
                 mealsPerDay?.value
             ) || 0;
 
+
         const allowance =
             parseFloat(
                 allowancePerDay?.value
             ) || 0;
+
 
         const transport =
             parseFloat(
                 localTransport?.value
             ) || 0;
 
+
         const contingency =
             parseFloat(
                 contingencies?.value
             ) || 0;
 
+
         const balanceReceived =
             spdSelect.value &&
             spdData[spdSelect.value]
+
                 ? parseFloat(
                     spdData[
                         spdSelect.value
                     ].balance_received
                 ) || 0
+
                 : 0;
 
 
@@ -1515,6 +1777,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
         const mealsTotal =
             meals * days;
+
 
         const allowanceTotal =
             allowance * days;
@@ -1556,7 +1819,9 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 formatCurrency(
                     mealsTotal
                 );
+
         }
+
 
         if (actualAllowanceTotal) {
 
@@ -1564,6 +1829,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 formatCurrency(
                     allowanceTotal
                 );
+
         }
 
 
@@ -1579,7 +1845,9 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 formatCurrency(
                     balanceReceived
                 );
+
         }
+
 
         if (summaryExpenseBalance) {
 
@@ -1587,7 +1855,9 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 formatCurrency(
                     expenseBalance
                 );
+
         }
+
 
         if (summaryExpenseReportTotal) {
 
@@ -1595,6 +1865,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 formatCurrency(
                     expenseReportTotal
                 );
+
         }
 
 
@@ -1625,8 +1896,11 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
                 settlementLabel.textContent =
                     'Refund Employee — Employee returns balance';
+
             }
+
         }
+
     }
 
 
@@ -1636,11 +1910,12 @@ $spdData = $spds->mapWithKeys(function ($spd) {
     |--------------------------------------------------------------------------
     */
 
-  function loadSelectedSpd()
+    function loadSelectedSpd()
     {
         if (!spdSelect) {
             return;
         }
+
 
         const selectedId =
             spdSelect.value;
@@ -1661,86 +1936,118 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 'd-none'
             );
 
+
             rejectionInformation?.classList.add(
                 'd-none'
             );
 
+
             if (spdNumber)
                 spdNumber.textContent = '-';
 
+
             if (spdStatus) {
-                spdStatus.textContent = 'Approved';
-                spdStatus.className = 'badge text-bg-success';
+
+                spdStatus.textContent =
+                    'Approved';
+
+                spdStatus.className =
+                    'badge text-bg-success';
+
             }
+
 
             if (spdEmployee)
                 spdEmployee.textContent = '-';
 
+
             if (spdProject)
                 spdProject.textContent = '-';
+
 
             if (spdCostCenter)
                 spdCostCenter.textContent = '-';
 
+
             if (spdManager)
                 spdManager.textContent = '-';
+
 
             if (spdApprovalDocument)
                 spdApprovalDocument.textContent = '-';
 
+
             if (spdTravelType)
                 spdTravelType.textContent = '-';
+
 
             if (spdFrom)
                 spdFrom.textContent = '-';
 
+
             if (spdDestination)
                 spdDestination.textContent = '-';
+
 
             if (spdDeparture)
                 spdDeparture.textContent = '-';
 
+
             if (spdReturn)
                 spdReturn.textContent = '-';
+
 
             if (spdTotalDays)
                 spdTotalDays.textContent = '-';
 
+
             if (spdMealsPerDay)
                 spdMealsPerDay.textContent = 'Rp 0';
+
 
             if (spdAllowancePerDay)
                 spdAllowancePerDay.textContent = 'Rp 0';
 
+
             if (spdLocalTransport)
                 spdLocalTransport.textContent = 'Rp 0';
+
 
             if (spdContingencies)
                 spdContingencies.textContent = 'Rp 0';
 
+
             if (spdTransportation)
                 spdTransportation.textContent = '-';
+
 
             if (spdAdvancePayment)
                 spdAdvancePayment.textContent = '-';
 
+
             if (spdPurpose)
                 spdPurpose.textContent = '-';
+
 
             if (spdNote)
                 spdNote.textContent = '-';
 
+
             if (spdBalanceReceived)
                 spdBalanceReceived.textContent = 'Rp 0';
+
 
             if (managerRejectionReason)
                 managerRejectionReason.textContent = '-';
 
+
             if (mealsPerDay)
                 mealsPerDay.value = '0';
 
+
             if (allowancePerDay)
                 allowancePerDay.value = '0';
+
 
             calculateExpense();
 
@@ -1789,6 +2096,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
             spdStatus.className =
                 'badge text-bg-success';
+
         }
 
 
@@ -1810,48 +2118,35 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
         if (isRejected) {
 
-            /*
-            |--------------------------------------------------------------------------
-            | Show rejection information
-            |--------------------------------------------------------------------------
-            */
-
             rejectionInformation?.classList.remove(
                 'd-none'
             );
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Manager rejection reason
-            |--------------------------------------------------------------------------
-            */
 
             if (managerRejectionReason) {
 
                 managerRejectionReason.textContent =
                     spd.manager_rejection_reason ||
                     'No rejection reason provided.';
+
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Submit area
-            |--------------------------------------------------------------------------
-            */
 
             if (submitTitle) {
 
                 submitTitle.textContent =
                     'Ready to resubmit?';
+
             }
+
 
             if (submitDescription) {
 
                 submitDescription.textContent =
                     'Correct the rejected SPD Report and submit it again for Manager approval.';
+
             }
+
 
             if (submitButton) {
 
@@ -1862,12 +2157,15 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 submitButton.classList.add(
                     'btn-warning'
                 );
+
             }
+
 
             if (submitButtonText) {
 
                 submitButtonText.textContent =
                     'Resubmit SPD Report';
+
             }
 
 
@@ -1881,30 +2179,39 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
                 dateDeparture.value =
                     spd.report_date_departure || '';
+
             }
+
 
             if (dateReturn) {
 
                 dateReturn.value =
                     spd.report_date_return || '';
+
             }
+
 
             if (localTransport) {
 
                 localTransport.value =
                     spd.report_local_transport ?? 0;
+
             }
+
 
             if (contingencies) {
 
                 contingencies.value =
                     spd.report_contingencies ?? 0;
+
             }
+
 
             if (document.getElementById('note')) {
 
                 document.getElementById('note').value =
                     spd.report_note || '';
+
             }
 
         } else {
@@ -1924,12 +2231,15 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
                 submitTitle.textContent =
                     'Ready to submit?';
+
             }
+
 
             if (submitDescription) {
 
                 submitDescription.textContent =
                     'Make sure the actual expenses and evidence are correct before submitting.';
+
             }
 
 
@@ -1942,6 +2252,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 submitButton.classList.add(
                     'btn-primary'
                 );
+
             }
 
 
@@ -1949,6 +2260,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
                 submitButtonText.textContent =
                     'Submit SPD Report';
+
             }
 
 
@@ -1962,31 +2274,41 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
                 dateDeparture.value =
                     @json(old('date_departure', ''));
+
             }
+
 
             if (dateReturn) {
 
                 dateReturn.value =
                     @json(old('date_return', ''));
+
             }
+
 
             if (localTransport) {
 
                 localTransport.value =
                     @json(old('local_transport', 0));
+
             }
+
 
             if (contingencies) {
 
                 contingencies.value =
                     @json(old('contingencies', 0));
+
             }
+
 
             if (document.getElementById('note')) {
 
                 document.getElementById('note').value =
                     @json(old('note', ''));
+
             }
+
         }
 
 
@@ -1999,7 +2321,8 @@ $spdData = $spds->mapWithKeys(function ($spd) {
         if (spdNumber) {
 
             spdNumber.textContent =
-                'SPD #' + spd.id;
+                spd.spd_number || '-';
+
         }
 
 
@@ -2013,30 +2336,39 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
             spdEmployee.textContent =
                 spd.employee;
+
         }
+
 
         if (spdProject) {
 
             spdProject.textContent =
                 spd.project;
+
         }
+
 
         if (spdCostCenter) {
 
             spdCostCenter.textContent =
                 spd.cost_center;
+
         }
+
 
         if (spdManager) {
 
             spdManager.textContent =
                 spd.manager;
+
         }
+
 
         if (spdApprovalDocument) {
 
             spdApprovalDocument.textContent =
                 spd.approval_document;
+
         }
 
 
@@ -2050,31 +2382,41 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
             spdTravelType.textContent =
                 spd.travel_type;
+
         }
+
 
         if (spdFrom) {
 
             spdFrom.textContent =
                 spd.from;
+
         }
+
 
         if (spdDestination) {
 
             spdDestination.textContent =
                 spd.destination;
+
         }
+
 
         if (spdDeparture) {
 
             spdDeparture.textContent =
                 spd.date_departure;
+
         }
+
 
         if (spdReturn) {
 
             spdReturn.textContent =
                 spd.date_return;
+
         }
+
 
         if (spdTotalDays) {
 
@@ -2085,18 +2427,23 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                         ? ' day'
                         : ' days'
                 );
+
         }
+
 
         if (spdTransportation) {
 
             spdTransportation.textContent =
                 spd.transportation;
+
         }
+
 
         if (spdAdvancePayment) {
 
             spdAdvancePayment.textContent =
                 spd.advance_payment;
+
         }
 
 
@@ -2112,7 +2459,9 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 formatCurrency(
                     spd.meals_per_day
                 );
+
         }
+
 
         if (spdAllowancePerDay) {
 
@@ -2120,7 +2469,9 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 formatCurrency(
                     spd.allowance_per_day
                 );
+
         }
+
 
         if (spdLocalTransport) {
 
@@ -2128,7 +2479,9 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 formatCurrency(
                     spd.local_transport
                 );
+
         }
+
 
         if (spdContingencies) {
 
@@ -2136,7 +2489,9 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 formatCurrency(
                     spd.contingencies
                 );
+
         }
+
 
         if (spdBalanceReceived) {
 
@@ -2144,6 +2499,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 formatCurrency(
                     spd.balance_received
                 );
+
         }
 
 
@@ -2157,12 +2513,15 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 
             spdPurpose.textContent =
                 spd.purpose;
+
         }
+
 
         if (spdNote) {
 
             spdNote.textContent =
                 spd.note;
+
         }
 
 
@@ -2182,7 +2541,9 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 Number(
                     spd.meals_per_day || 0
                 );
+
         }
+
 
         if (allowancePerDay) {
 
@@ -2190,6 +2551,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
                 Number(
                     spd.allowance_per_day || 0
                 );
+
         }
 
 
@@ -2200,6 +2562,7 @@ $spdData = $spds->mapWithKeys(function ($spd) {
         */
 
         calculateExpense();
+
     }
 
 
@@ -2250,4 +2613,3 @@ $spdData = $spds->mapWithKeys(function ($spd) {
 </script>
 
 @endsection
-

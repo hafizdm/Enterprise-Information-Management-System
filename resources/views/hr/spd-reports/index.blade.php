@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('content')
@@ -19,10 +20,15 @@
         </div>
 
         @can('spd-report.create')
-            <a href="{{ route('spd-reports.create') }}" class="btn btn-primary">
+
+            <a
+                href="{{ route('spd-reports.create') }}"
+                class="btn btn-primary"
+            >
                 <i class="bi bi-plus-lg me-1"></i>
                 Create SPD Report
             </a>
+
         @endcan
 
     </div>
@@ -40,6 +46,7 @@
                 </div>
 
                 <div>
+
                     <h6 class="fw-bold mb-1">
                         SPD Report Information
                     </h6>
@@ -47,7 +54,9 @@
                     <p class="text-muted small mb-0">
                         Only SPD requests that have been fully approved are available
                         for expense reporting. Each approved SPD can have one report only.
+                        Rejected reports can be resubmitted using the same SPD number.
                     </p>
+
                 </div>
 
             </div>
@@ -65,6 +74,7 @@
             <div class="d-flex justify-content-between align-items-center">
 
                 <div>
+
                     <h6 class="fw-bold mb-0">
                         SPD Report History
                     </h6>
@@ -72,10 +82,15 @@
                     <small class="text-muted">
                         Your submitted business trip expense reports
                     </small>
+
                 </div>
 
                 <span class="badge bg-light text-dark border">
-                    {{ $reports->count() }} Report{{ $reports->count() !== 1 ? 's' : '' }}
+
+                    {{ $reports->total() }}
+
+                    Report{{ $reports->total() !== 1 ? 's' : '' }}
+
                 </span>
 
             </div>
@@ -89,7 +104,7 @@
 
                 <div class="table-responsive">
 
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0 text-nowrap">
 
                         <thead class="table-light">
 
@@ -142,15 +157,17 @@
 
                                 <tr>
 
-                                    {{-- SPD --}}
+                                    {{-- SPD Number --}}
                                     <td class="px-3">
 
-                                        <div class="fw-semibold">
-                                            SPD #{{ $report->spd_id }}
+                                        <div class="fw-semibold text-primary">
+                                            {{ $report->spd?->spd_number ?? '-' }}
                                         </div>
 
                                         <small class="text-muted">
-                                            {{ $report->spd?->travel_type ? ucfirst($report->spd->travel_type) : '-' }}
+                                            {{ $report->spd?->travel_type
+                                                ? ucfirst($report->spd->travel_type)
+                                                : '-' }}
                                         </small>
 
                                     </td>
@@ -164,10 +181,14 @@
                                         </div>
 
                                         @if($report->spd?->project?->cost_center)
+
                                             <small class="text-muted">
+
                                                 Cost Center:
                                                 {{ $report->spd->project->cost_center }}
+
                                             </small>
+
                                         @endif
 
                                     </td>
@@ -181,8 +202,11 @@
                                         </div>
 
                                         <small class="text-muted">
+
                                             <i class="bi bi-arrow-right mx-1"></i>
+
                                             {{ $report->spd?->destination ?? '-' }}
+
                                         </small>
 
                                     </td>
@@ -212,17 +236,28 @@
                                         @endphp
 
                                         <span class="fw-semibold">
-                                            Rp {{ number_format(abs($expenseTotal), 0, ',', '.') }}
+
+                                            Rp
+                                            {{ number_format(abs($expenseTotal), 0, ',', '.') }}
+
                                         </span>
 
                                         <div class="small text-muted">
+
                                             @if($expenseTotal < 0)
+
                                                 Company owes employee
+
                                             @elseif($expenseTotal > 0)
+
                                                 Employee returns balance
+
                                             @else
+
                                                 No balance
+
                                             @endif
+
                                         </div>
 
                                     </td>
@@ -233,33 +268,66 @@
 
                                         @switch($report->status_report)
 
-                                            @case('draft')
-                                                <span class="badge bg-secondary">
-                                                    Draft
-                                                </span>
-                                                @break
-
                                             @case('submitted')
+
                                                 <span class="badge bg-primary">
+
+                                                    <i class="bi bi-clock me-1"></i>
                                                     Submitted
+
                                                 </span>
+
                                                 @break
 
-                                            @case('reviewed')
-                                                <span class="badge bg-info text-dark">
-                                                    Reviewed
+
+                                            @case('approved')
+
+                                                <span class="badge bg-success">
+
+                                                    <i class="bi bi-check-circle me-1"></i>
+                                                    Approved
+
                                                 </span>
+
                                                 @break
+
+
+                                            @case('rejected')
+
+                                                <span class="badge bg-danger">
+
+                                                    <i class="bi bi-x-circle me-1"></i>
+                                                    Rejected
+
+                                                </span>
+
+                                                @break
+
 
                                             @case('settled')
+
                                                 <span class="badge bg-success">
+
+                                                    <i class="bi bi-check-circle me-1"></i>
                                                     Settled
+
                                                 </span>
+
                                                 @break
 
+
                                             @default
+
                                                 <span class="badge bg-light text-dark border">
-                                                    {{ ucfirst($report->status_report ?? '-') }}
+
+                                                    {{ ucfirst(
+                                                        str_replace(
+                                                            '_',
+                                                            ' ',
+                                                            $report->status_report ?? '-'
+                                                        )
+                                                    ) }}
+
                                                 </span>
 
                                         @endswitch
@@ -273,24 +341,40 @@
                                         @switch($report->settlement_status)
 
                                             @case('reimburse')
+
                                                 <span class="badge bg-warning text-dark">
+
                                                     Reimburse
+
                                                 </span>
+
                                                 @break
+
 
                                             @case('cash_clear')
+
                                                 <span class="badge bg-success">
+
                                                     Cash Clear
+
                                                 </span>
+
                                                 @break
+
 
                                             @case('refund_employee')
+
                                                 <span class="badge bg-danger">
+
                                                     Refund Employee
+
                                                 </span>
+
                                                 @break
 
+
                                             @default
+
                                                 <span class="text-muted">
                                                     -
                                                 </span>
@@ -308,8 +392,10 @@
                                             class="btn btn-sm btn-outline-primary"
                                             title="View Report"
                                         >
+
                                             <i class="bi bi-eye me-1"></i>
                                             View
+
                                         </a>
 
                                     </td>
@@ -323,6 +409,7 @@
                     </table>
 
                 </div>
+
 
             @else
 
@@ -340,9 +427,11 @@
                     </h5>
 
                     <p class="text-muted mb-4">
+
                         You don't have any submitted SPD reports yet.
                         Once your SPD has been fully approved, you can create
                         an expense report from it.
+
                     </p>
 
                     @can('spd-report.create')
@@ -351,8 +440,10 @@
                             href="{{ route('spd-reports.create') }}"
                             class="btn btn-primary"
                         >
+
                             <i class="bi bi-plus-lg me-1"></i>
                             Create SPD Report
+
                         </a>
 
                     @endcan
@@ -362,6 +453,141 @@
             @endif
 
         </div>
+
+
+        {{-- Pagination --}}
+        @if ($reports->hasPages())
+
+            <div class="card-footer bg-white border-0 py-3">
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                    <small class="text-muted">
+
+                        Showing
+                        <strong>{{ $reports->firstItem() }}</strong>
+                        to
+                        <strong>{{ $reports->lastItem() }}</strong>
+                        of
+                        <strong>{{ $reports->total() }}</strong>
+                        results
+
+                    </small>
+
+
+                    <nav aria-label="SPD Report pagination">
+
+                        <ul class="pagination pagination-sm mb-0">
+
+                            {{-- Previous --}}
+                            @if ($reports->onFirstPage())
+
+                                <li class="page-item disabled">
+
+                                    <span class="page-link">
+
+                                        <i class="bi bi-chevron-left"></i>
+
+                                    </span>
+
+                                </li>
+
+                            @else
+
+                                <li class="page-item">
+
+                                    <a
+                                        class="page-link"
+                                        href="{{ $reports->previousPageUrl() }}"
+                                        aria-label="Previous"
+                                    >
+
+                                        <i class="bi bi-chevron-left"></i>
+
+                                    </a>
+
+                                </li>
+
+                            @endif
+
+
+                            {{-- Page Numbers --}}
+                            @foreach ($reports->getUrlRange(
+                                max(1, $reports->currentPage() - 2),
+                                min($reports->lastPage(), $reports->currentPage() + 2)
+                            ) as $page => $url)
+
+                                @if ($page == $reports->currentPage())
+
+                                    <li
+                                        class="page-item active"
+                                        aria-current="page"
+                                    >
+
+                                        <span class="page-link">
+                                            {{ $page }}
+                                        </span>
+
+                                    </li>
+
+                                @else
+
+                                    <li class="page-item">
+
+                                        <a
+                                            class="page-link"
+                                            href="{{ $url }}"
+                                        >
+                                            {{ $page }}
+                                        </a>
+
+                                    </li>
+
+                                @endif
+
+                            @endforeach
+
+
+                            {{-- Next --}}
+                            @if ($reports->hasMorePages())
+
+                                <li class="page-item">
+
+                                    <a
+                                        class="page-link"
+                                        href="{{ $reports->nextPageUrl() }}"
+                                        aria-label="Next"
+                                    >
+
+                                        <i class="bi bi-chevron-right"></i>
+
+                                    </a>
+
+                                </li>
+
+                            @else
+
+                                <li class="page-item disabled">
+
+                                    <span class="page-link">
+
+                                        <i class="bi bi-chevron-right"></i>
+
+                                    </span>
+
+                                </li>
+
+                            @endif
+
+                        </ul>
+
+                    </nav>
+
+                </div>
+
+            </div>
+
+        @endif
 
     </div>
 

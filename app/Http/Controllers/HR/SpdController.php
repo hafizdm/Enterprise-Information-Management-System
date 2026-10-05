@@ -70,7 +70,7 @@ class SpdController extends Controller
     /**
      * Store a newly created SPD.
      */
-    public function store(Request $request)
+   public function store(Request $request)
     {
         abort_unless(
             auth()->user()->can('spd.create'),
@@ -150,215 +150,291 @@ class SpdController extends Controller
             ],
         ]);
 
-        DB::transaction(function () use ($validated) {
+        /*
+        |--------------------------------------------------------------------------
+        | SPD Numbering
+        |--------------------------------------------------------------------------
+        |
+        | Sequence resets every year.
+        |
+        | Example:
+        | 2026 -> 001, 002, 003, ...
+        | 2027 -> 001, 002, 003, ...
+        |
+        | Month represents the month when the SPD is created.
+        |
+        */
 
-            /*
-            |--------------------------------------------------------------------------
-            | Employee
-            |--------------------------------------------------------------------------
-            */
+        $documentYear = now()->year;
 
-            $employee = Employee::with([
-                'manager',
-                'costLevel',
-            ])
-                ->lockForUpdate()
-                ->findOrFail($validated['employee_id']);
+        $lockName = 'eims_spd_numbering_' . $documentYear;
 
-            /*
-            |--------------------------------------------------------------------------
-            | SPD Limit
-            |--------------------------------------------------------------------------
-            */
+        $lockResult = DB::selectOne(
+            'SELECT GET_LOCK(?, 10) AS acquired',
+            [$lockName]
+        );
 
-            if ($employee->spd_limit <= 0) {
-                abort(
-                    422,
-                    'This employee has no available SPD limit.'
+        abort_unless(
+            $lockResult && (int) $lockResult->acquired === 1,
+            503,
+            'The system is currently generating another SPD number. Please try again.'
+        );
+
+        try {
+
+            DB::transaction(function () use (
+                $validated,
+                $documentYear
+            ) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Employee
+                |--------------------------------------------------------------------------
+                */
+
+                $employee = Employee::with([
+                    'manager',
+                    'costLevel',
+                ])
+                    ->lockForUpdate()
+                    ->findOrFail($validated['employee_id']);
+
+                /*
+                |--------------------------------------------------------------------------
+                | SPD Limit
+                |--------------------------------------------------------------------------
+                */
+
+                if ($employee->spd_limit <= 0) {
+                    abort(
+                        422,
+                        'This employee has no available SPD limit.'
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Manager
+                |--------------------------------------------------------------------------
+                */
+
+                $manager = $employee->manager;
+
+                if (!$manager) {
+                    abort(
+                        422,
+                        'The selected employee does not have a manager assigned.'
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Project
+                |--------------------------------------------------------------------------
+                */
+
+                $project = Project::with([
+                    'approvalEmployee',
+                ])
+                    ->findOrFail($validated['project_id']);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Cost Level
+                |--------------------------------------------------------------------------
+                */
+
+                $costLevel = $employee->costLevel;
+
+                if (!$costLevel) {
+                    abort(
+                        422,
+                        'The selected employee does not have a Cost Level assigned.'
+                    );
+                }
+
+                if (!$costLevel->is_active) {
+                    abort(
+                        422,
+                        'The Cost Level assigned to this employee is inactive.'
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Cost Control / Approval Document
+                |--------------------------------------------------------------------------
+                */
+
+                $approvalDocument = $project->approvalEmployee;
+
+                if (!$approvalDocument) {
+                    abort(
+                        422,
+                        'The selected project does not have an Approval Document employee assigned.'
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Total Days
+                |--------------------------------------------------------------------------
+                */
+
+                $dateDeparture = Carbon::parse(
+                    $validated['date_departure']
                 );
-            }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Manager
-            |--------------------------------------------------------------------------
-            */
-
-            $manager = $employee->manager;
-
-            if (!$manager) {
-                abort(
-                    422,
-                    'The selected employee does not have a manager assigned.'
+                $dateReturn = Carbon::parse(
+                    $validated['date_return']
                 );
-            }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Project
-            |--------------------------------------------------------------------------
-            | Project is selected specifically for the SPD.
-            | It does not have to be the employee's master project.
-            */
+                $totalDays = $dateDeparture->diffInDays($dateReturn) + 1;
 
-            $project = Project::with([
-                'approvalEmployee',
-            ])
-                ->findOrFail($validated['project_id']);
+                /*
+                |--------------------------------------------------------------------------
+                | Meals & Allowance
+                |--------------------------------------------------------------------------
+                */
 
-            /*
-            |--------------------------------------------------------------------------
-            | Cost Level
-            |--------------------------------------------------------------------------
-            */
+                if ($validated['travel_type'] === 'domestic') {
+                    $mealsPerDay = (float) $costLevel->meals_domestic;
+                    $allowancePerDay = (float) $costLevel->allowance_domestic;
+                } else {
+                    $mealsPerDay = (float) $costLevel->meals_international;
+                    $allowancePerDay = (float) $costLevel->allowance_international;
+                }
 
-            $costLevel = $employee->costLevel;
+                /*
+                |--------------------------------------------------------------------------
+                | Additional Costs
+                |--------------------------------------------------------------------------
+                */
 
-            if (!$costLevel) {
-                abort(
-                    422,
-                    'The selected employee does not have a Cost Level assigned.'
+                $localTransport = (float) (
+                    $validated['local_transport'] ?? 0
                 );
-            }
 
-            if (!$costLevel->is_active) {
-                abort(
-                    422,
-                    'The Cost Level assigned to this employee is inactive.'
+                $contingencies = (float) (
+                    $validated['contingencies'] ?? 0
                 );
-            }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Balance Received
+                |--------------------------------------------------------------------------
+                */
+
+                $balanceReceived =
+                    ($mealsPerDay * $totalDays)
+                    + ($allowancePerDay * $totalDays)
+                    + $localTransport
+                    + $contingencies;
+
+                /*
+                |--------------------------------------------------------------------------
+                | Generate SPD Number
+                |--------------------------------------------------------------------------
+                */
+
+                $lastSequence = Spd::where(
+                    'document_year',
+                    $documentYear
+                )
+                    ->max('document_sequence');
+
+                $documentSequence = ((int) $lastSequence) + 1;
+
+                $documentMonth = now()->format('m');
+
+                $spdNumber = sprintf(
+                    'RII/HC-SPD/%s/%d/%03d',
+                    $documentMonth,
+                    $documentYear,
+                    $documentSequence
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Create SPD
+                |--------------------------------------------------------------------------
+                */
+
+                Spd::create([
+                    'spd_number' => $spdNumber,
+
+                    'document_year' => $documentYear,
+
+                    'document_sequence' => $documentSequence,
+
+                    'employee_id' => $employee->id,
+
+                    'project_id' => $project->id,
+
+                    'manager_id' => $manager->id,
+
+                    'approval_document_id' => $approvalDocument->id,
+
+                    'travel_type' => $validated['travel_type'],
+
+                    'from' => $validated['from'],
+
+                    'destination' => $validated['destination'],
+
+                    'date_departure' => $validated['date_departure'],
+
+                    'date_return' => $validated['date_return'],
+
+                    'total_days' => $totalDays,
+
+                    'meals_per_day' => $mealsPerDay,
+
+                    'allowance_per_day' => $allowancePerDay,
+
+                    'local_transport' => $localTransport,
+
+                    'contingencies' => $contingencies,
+
+                    'balance_received' => $balanceReceived,
+
+                    'transportation' => $validated['transportation'],
+
+                    'advance_payment' => $validated['advance_payment'],
+
+                    'note' => $validated['note'] ?? null,
+
+                    'purpose' => $validated['purpose'],
+
+                    'status' => 'pending_manager',
+
+                    'created_by' => auth()->id(),
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Decrease SPD Limit
+                |--------------------------------------------------------------------------
+                */
+
+                $employee->spd_limit = $employee->spd_limit - 1;
+
+                $employee->save();
+            });
+
+        } finally {
 
             /*
             |--------------------------------------------------------------------------
-            | Cost Control / Approval Document
+            | Release SPD Numbering Lock
             |--------------------------------------------------------------------------
             */
 
-            $approvalDocument = $project->approvalEmployee;
-
-            if (!$approvalDocument) {
-                abort(
-                    422,
-                    'The selected project does not have an Approval Document employee assigned.'
-                );
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Total Days
-            |--------------------------------------------------------------------------
-            */
-
-            $dateDeparture = Carbon::parse(
-                $validated['date_departure']
+            DB::select(
+                'SELECT RELEASE_LOCK(?)',
+                [$lockName]
             );
-
-            $dateReturn = Carbon::parse(
-                $validated['date_return']
-            );
-
-            $totalDays = $dateDeparture->diffInDays($dateReturn) + 1;
-
-            /*
-            |--------------------------------------------------------------------------
-            | Meals & Allowance
-            |--------------------------------------------------------------------------
-            */
-
-            if ($validated['travel_type'] === 'domestic') {
-                $mealsPerDay = (float) $costLevel->meals_domestic;
-                $allowancePerDay = (float) $costLevel->allowance_domestic;
-            } else {
-                $mealsPerDay = (float) $costLevel->meals_international;
-                $allowancePerDay = (float) $costLevel->allowance_international;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Additional Costs
-            |--------------------------------------------------------------------------
-            */
-
-            $localTransport = (float) (
-                $validated['local_transport'] ?? 0
-            );
-
-            $contingencies = (float) (
-                $validated['contingencies'] ?? 0
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | Balance Received
-            |--------------------------------------------------------------------------
-            */
-
-            $balanceReceived =
-                ($mealsPerDay * $totalDays)
-                + ($allowancePerDay * $totalDays)
-                + $localTransport
-                + $contingencies;
-
-            /*
-            |--------------------------------------------------------------------------
-            | Create SPD
-            |--------------------------------------------------------------------------
-            */
-
-            Spd::create([
-                'employee_id' => $employee->id,
-
-                'project_id' => $project->id,
-
-                'manager_id' => $manager->id,
-
-                'approval_document_id' => $approvalDocument->id,
-
-                'travel_type' => $validated['travel_type'],
-
-                'from' => $validated['from'],
-
-                'destination' => $validated['destination'],
-
-                'date_departure' => $validated['date_departure'],
-
-                'date_return' => $validated['date_return'],
-
-                'total_days' => $totalDays,
-
-                'meals_per_day' => $mealsPerDay,
-
-                'allowance_per_day' => $allowancePerDay,
-
-                'local_transport' => $localTransport,
-
-                'contingencies' => $contingencies,
-
-                'balance_received' => $balanceReceived,
-
-                'transportation' => $validated['transportation'],
-
-                'advance_payment' => $validated['advance_payment'],
-
-                'note' => $validated['note'] ?? null,
-
-                'purpose' => $validated['purpose'],
-
-                'status' => 'pending_manager',
-
-                'created_by' => auth()->id(),
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Decrease SPD Limit
-            |--------------------------------------------------------------------------
-            */
-
-            $employee->spd_limit = $employee->spd_limit - 1;
-
-            $employee->save();
-        });
+        }
 
         return redirect()
             ->route('spds.index')
@@ -367,8 +443,7 @@ class SpdController extends Controller
                 'SPD berhasil dibuat dan menunggu approval Manager.'
             );
     }
-
-    /**
+   /**
      * Display the specified SPD.
      */
     public function show(Spd $spd)
