@@ -97,15 +97,21 @@ Route::middleware('auth')->group(function () {
     });
 
 
-  // HR Leave Monitoring - HRD ONLY
+  // HR Monitoring - HRD ONLY
     Route::middleware('role:HRD')->group(function () {
-
+        
+        //Leave Monitoring Routes
         Route::get('/leave-monitoring', [LeaveRequestController::class, 'hrIndex'])
             ->name('leave-monitoring.index');
 
         Route::get('/leave-monitoring/{leaveRequest}', [LeaveRequestController::class, 'monitoringShow'])
             ->name('leave-monitoring.show');
 
+        // SPD Report Monitoring 
+        Route::get('/spd-report-monitoring', [SpdReportController::class, 'hrMonitoring']) 
+            ->name('spd-report-monitoring.index');
+        Route::get('/spd-report-monitoring/{spdReport}', [SpdReportController::class, 'hrMonitoringShow'])
+            ->name('spd-report-monitoring.show');
     });
 });
 

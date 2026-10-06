@@ -662,4 +662,63 @@ class SpdReportController extends Controller
             compact('spdReport')
         );
     }
+
+    public function hrMonitoring()
+    {
+        abort_unless(
+        auth()->user()->can('spd-report.view-any'),
+        403,
+        'You are not authorized to monitor SPD reports.'
+        );
+
+
+        $reports = SpdReport::with([
+            'spd.project',
+            'spd.manager',
+            'spd.approvalDocument',
+            'employee',
+        ])
+            ->where('status_report', 'approved')
+            ->latest()
+            ->paginate(10);
+
+        return view(
+            'hr.spd-reports.monitoring.index',
+            compact('reports')
+        );
+
+
+    }
+
+    public function hrMonitoringShow(SpdReport $spdReport)
+    {
+        abort_unless(
+        auth()->user()->can('spd-report.view-any'),
+        403,
+        'You are not authorized to view SPD reports.'
+        );
+
+
+        abort_unless(
+            $spdReport->status_report === 'approved',
+            404
+        );
+
+        $spdReport->load([
+            'spd.project',
+            'spd.manager',
+            'spd.approvalDocument',
+            'employee.costLevel',
+            'employee',
+        ]);
+
+        return view(
+            'hr.spd-reports.monitoring.show',
+            compact('spdReport')
+        );
+
+
+    }
+
+
 }

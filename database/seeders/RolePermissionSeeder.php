@@ -57,6 +57,7 @@ class RolePermissionSeeder extends Seeder
             'spd-report.view-approval',
             'spd-report.approve',
             'spd-report.reject',
+            'spd-report.view-any',
 
             // Cost Level
             'cost-level.view',
@@ -193,6 +194,8 @@ class RolePermissionSeeder extends Seeder
                 'spd.view-any',
                 'spd.create',
                 'spd.delete',
+
+                'spd-report.view-any',
 
                 'leave.view-any',
 
