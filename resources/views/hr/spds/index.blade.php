@@ -430,8 +430,14 @@
 
                                         <i class="bi bi-eye me-1"></i>
 
-                                        View
+                                        
 
+                                    </a>
+
+                                    <a href="{{ route('spds.pdf', $spd) }}"
+                                        class="btn btn-sm btn-outline-danger"
+                                        target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i>
                                     </a>
 
 
@@ -460,7 +466,7 @@
 
                                                     <i class="bi bi-trash me-1"></i>
 
-                                                    Delete
+                                                    
 
                                                 </button>
 

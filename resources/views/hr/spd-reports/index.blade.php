@@ -394,8 +394,16 @@
                                         >
 
                                             <i class="bi bi-eye me-1"></i>
-                                            View
+                                          
 
+                                        </a>
+
+                                        {{-- View PDF --}} 
+                                        <a href="{{ route('spd-reports.pdf', $report) }}" 
+                                            class="btn btn-sm btn-outline-danger" target="_blank" 
+                                            title="View PDF" 
+                                        > 
+                                            <i class="bi bi-file-earmark-pdf"></i> 
                                         </a>
 
                                     </td>

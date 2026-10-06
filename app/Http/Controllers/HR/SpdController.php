@@ -466,8 +466,77 @@ class SpdController extends Controller
     }
 
     /**
-     * Delete an SPD request.
-     */
+ * Generate SPD PDF.
+ */
+   /**
+ * Generate SPD PDF.
+ */
+/**
+ * Generate SPD PDF.
+ */
+    public function pdf(Spd $spd)
+    {
+        $user = auth()->user();
+
+        $employee = $user->employee;
+
+        abort_unless(
+            $employee,
+            403,
+            'Your user account is not linked to an employee.'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Authorization
+        |--------------------------------------------------------------------------
+        |
+        | User can view the SPD PDF if:
+        |
+        | 1. User has spd.view-any
+        | 2. User is the assigned Manager
+        | 3. User is the assigned Cost Center User
+        |
+        */
+
+        $canViewAny = $user->can('spd.view-any');
+
+        $isManager = $spd->manager_id === $employee->id;
+
+        $isCostCenterUser =
+            $spd->approval_document_id === $employee->id;
+
+        abort_unless(
+            $canViewAny ||
+            $isManager ||
+            $isCostCenterUser,
+            403,
+            'You are not authorized to print this SPD.'
+        );
+
+        $spd->load([
+            'employee.division',
+            'employee.position',
+            'employee.project',
+            'project',
+            'manager.position',
+            'approvalDocument.position',
+            'creator.employee',
+        ]);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'hr.spds.pdf',
+            compact('spd')
+        );
+
+        return $pdf->stream(
+            'spd-' . $spd->id . '.pdf'
+        );
+    }
+
+        /**
+         * Delete an SPD request.
+         */
     public function destroy(Spd $spd)
     {
         abort_unless(

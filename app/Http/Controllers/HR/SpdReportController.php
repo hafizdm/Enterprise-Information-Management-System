@@ -663,6 +663,92 @@ class SpdReportController extends Controller
         );
     }
 
+    /**
+ * Generate SPD Report PDF.
+ *
+ * Employee:
+ * - Can print their own SPD Report.
+ *
+ * HR / Monitoring:
+ * - Can print approved SPD Reports.
+ */
+    public function pdf(SpdReport $spdReport)
+    {
+        $user = auth()->user();
+
+        $employee = $user->employee;
+
+        abort_unless(
+            $employee,
+            403,
+            'Your user account is not linked to an employee.'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Authorization
+        |--------------------------------------------------------------------------
+        |
+        | Employee:
+        | Can print their own SPD Report.
+        |
+        | HR / Monitoring:
+        | Can print approved SPD Reports.
+        |
+        */
+
+        $isOwner =
+            $spdReport->employee_id === $employee->id;
+
+        $isHrMonitoring =
+            $user->can('spd-report.view-any')
+            && $spdReport->status_report === 'approved';
+
+        abort_unless(
+            $isOwner || $isHrMonitoring,
+            403,
+            'You are not authorized to print this SPD Report.'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Load PDF Data
+        |--------------------------------------------------------------------------
+        */
+
+        $spdReport->load([
+            'employee.division',
+            'employee.position',
+            'employee.costLevel',
+
+            'spd.project',
+
+            'spd.manager.position',
+
+            'spd.approvalDocument.position',
+
+            /*
+            | HR who created the original SPD
+            */
+            'spd.creator.employee.position',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Generate PDF
+        |--------------------------------------------------------------------------
+        */
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'hr.spd-reports.pdf',
+            compact('spdReport')
+        );
+
+        return $pdf->stream(
+            'spd-report-' . $spdReport->id . '.pdf'
+        );
+    }
+
     public function hrMonitoring()
     {
         abort_unless(

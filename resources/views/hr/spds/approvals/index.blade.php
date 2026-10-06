@@ -248,8 +248,14 @@
 
                                     <i class="bi bi-eye me-1"></i>
 
-                                    Review
+                                    
 
+                                </a>
+
+                                <a href="{{ route('spds.pdf', $spd) }}"
+                                        class="btn btn-sm btn-outline-danger"
+                                        target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i>
                                 </a>
 
                             </td>

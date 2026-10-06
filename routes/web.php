@@ -172,6 +172,8 @@ Route::middleware('role:System Administrator')->group(function () {
 
     Route::get('/spd-reports/{spdReport}', [SpdReportController::class, 'show'])
         ->name('spd-reports.show');
+    Route::get('/spd-reports/{spdReport}/pdf',[SpdReportController::class, 'pdf'])
+        ->name('spd-reports.pdf');
 
 
 // SPD Routes
@@ -185,6 +187,9 @@ Route::middleware('role:System Administrator')->group(function () {
 
     Route::post('/spds', [SpdController::class, 'store'])
         ->name('spds.store');
+
+    Route::get('/spds/{spd}/pdf', [SpdController::class, 'pdf'])
+        ->name('spds.pdf');
 
     Route::get('/spds/{spd}', [SpdController::class, 'show'])
         ->name('spds.show');
