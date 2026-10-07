@@ -14,6 +14,7 @@ use App\Http\Controllers\HR\SpdApprovalController;
 use App\Http\Controllers\Master\CostLevelController;
 use App\Http\Controllers\HR\SpdReportController;
 use App\Http\Controllers\HR\SpdReportApprovalController;
+use Illuminate\Support\Facades\Mail;
 
 // =========================
 // Guest
@@ -65,6 +66,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/leave-approvals/{leaveRequest}/reject', [LeaveRequestController::class, 'managerReject'])
             ->name('leave-approvals.reject');
 
+
         // SPD Approval Routes
 
         Route::get('/spd-approvals', [SpdApprovalController::class, 'index'])
@@ -95,6 +97,11 @@ Route::middleware('auth')->group(function () {
             ->name('spd-report-approvals.reject');
 
     });
+
+    Route::get('/leave-approvals/{leaveRequest}/email-approve',[LeaveRequestController::class, 'managerApproveFromEmail'])
+    ->middleware('signed')
+    ->name('leave-approvals.email-approve');
+
 
 
   // HR Monitoring - HRD ONLY
@@ -212,3 +219,6 @@ Route::middleware('role:System Administrator')->group(function () {
         [LeaveApprovalSettingController::class, 'update']
         )->name('leave-approval-settings.update');
 });
+
+
+

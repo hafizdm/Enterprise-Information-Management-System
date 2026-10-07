@@ -6,6 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\User;
+use App\Notifications\LeaveSubmittedNotification;
+use App\Notifications\LeaveApprovedEmployeeNotification;
+use App\Notifications\LeaveApprovedHrNotification;
+use App\Notifications\LeaveRejectedEmployeeNotification;
+use Illuminate\Support\Facades\Notification;
 
 class LeaveRequestController extends Controller
 {
@@ -141,7 +147,7 @@ class LeaveRequestController extends Controller
         }
 
         // Simpan Leave Request
-        LeaveRequest::create([
+        $leaveRequest = LeaveRequest::create([
             'employee_id' => $employee->id,
             'leave_type' => $validated['leave_type'],
             'first_date' => $validated['first_date'],
@@ -151,6 +157,14 @@ class LeaveRequestController extends Controller
             'manager_id' => $manager->id,
             'status' => 'pending_manager',
         ]);
+
+        $managerUser = User::where('employee_id', $manager->id)->first();
+
+        if ($managerUser) {
+            $managerUser->notify(
+                new LeaveSubmittedNotification($leaveRequest)
+            );
+        }
 
         return redirect()
             ->route('leave-requests.index')
@@ -331,9 +345,75 @@ class LeaveRequestController extends Controller
             'manager_approved_at' => now(),
         ]);
 
+        $leaveRequest->refresh();
+
+        $employeeRequester = $leaveRequest->employee;
+
+        if ($employeeRequester?->email) {
+            Notification::route('mail', $employeeRequester->email)
+                ->notify(
+                    new LeaveApprovedEmployeeNotification($leaveRequest)
+                );
+        }
+
+        Notification::route('mail', 'iwan.krisnawan@rapidinfrastruktur.com')
+                ->notify(
+                    new LeaveApprovedHrNotification($leaveRequest)
+                );
+
         return redirect()
             ->route('leave-approvals.index')
             ->with('success', 'Leave request approved successfully.');
+    }
+
+    public function managerApproveFromEmail(Request $request,LeaveRequest $leaveRequest) 
+    {
+        $managerId = $request->query('manager');
+
+        // Pastikan manager ID tersedia
+        if (!$managerId) {
+            abort(403, 'Invalid approval link.');
+        }
+
+        // Pastikan manager pada URL adalah manager
+        // yang memang ditunjuk untuk Leave Request ini.
+        if ((int) $leaveRequest->manager_id !== (int) $managerId) {
+            abort(403, 'You are not authorized to approve this leave request.');
+        }
+
+        // Pastikan request masih menunggu approval manager.
+        if ($leaveRequest->status !== 'pending_manager') {
+            return response(
+                'This leave request is no longer waiting for manager approval.',
+                409
+            );
+        }
+
+        $leaveRequest->update([
+            'status' => 'approved',
+            'manager_approved_at' => now(),
+        ]);
+
+        $leaveRequest->refresh();
+
+        $employeeRequester = $leaveRequest->employee;
+
+        if ($employeeRequester?->email) {
+            Notification::route('mail', $employeeRequester->email)
+                ->notify(
+                    new LeaveApprovedEmployeeNotification($leaveRequest)
+                );
+        }
+
+        Notification::route('mail', 'iwan.krisnawan@rapidinfrastruktur.com')
+                ->notify(
+                    new LeaveApprovedHrNotification($leaveRequest)
+        );
+
+        return response(
+            'Leave request approved successfully. You may close this page.',
+            200
+        );
     }
 
 
@@ -370,6 +450,17 @@ class LeaveRequestController extends Controller
             'status' => 'rejected',
             'manager_rejection_reason' => $validated['manager_rejection_reason'],
         ]);
+
+        $leaveRequest->refresh();
+
+        $employeeRequester = $leaveRequest->employee;
+
+        if ($employeeRequester?->email) {
+            Notification::route('mail', $employeeRequester->email)
+                ->notify(
+                    new LeaveRejectedEmployeeNotification($leaveRequest)
+                );
+        }
 
         return redirect()
             ->route('leave-approvals.index')

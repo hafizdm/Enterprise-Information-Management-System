@@ -36,4 +36,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Employee::class);
     }
+
+    public function routeNotificationForMail($notification)
+    {
+        return $this->employee?->email;
+    }
 }
