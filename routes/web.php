@@ -81,6 +81,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/spd-approvals/{spd}/reject', [SpdApprovalController::class, 'reject'])
         ->name('spd.approvals.reject');
 
+        
+        // SPD Approval Email Confirmation
+        Route::get(
+            '/spd-approvals/{spd}/email-confirm/{stage}',
+            [SpdApprovalController::class, 'emailConfirm']
+        )
+            ->middleware('signed')
+            ->name('spd.approvals.email-confirm');
+
 
         // SPD Report Approval Routes
 

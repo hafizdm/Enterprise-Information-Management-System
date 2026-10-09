@@ -59,11 +59,12 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
+
         if ($user->must_change_password) {
             return redirect()->route('password.change');
         }
 
-        return redirect()->route('dashboard');
+        return redirect()->intended(route('dashboard'));
     }
 
     public function changePassword(Request $request)
@@ -85,8 +86,9 @@ class AuthController extends Controller
             'must_change_password' => false,
         ]);
 
+    
         return redirect()
-            ->route('dashboard')
+            ->intended(route('dashboard'))
             ->with('success', 'Password berhasil diubah.');
     }
 

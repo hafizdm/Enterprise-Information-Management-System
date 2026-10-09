@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Project;
+use App\Notifications\SpdApprovalResultNotification;
 
 class SpdController extends Controller
 {
@@ -70,7 +71,8 @@ class SpdController extends Controller
     /**
      * Store a newly created SPD.
      */
-   public function store(Request $request)
+
+    public function store(Request $request)
     {
         abort_unless(
             auth()->user()->can('spd.create'),
@@ -154,15 +156,6 @@ class SpdController extends Controller
         |--------------------------------------------------------------------------
         | SPD Numbering
         |--------------------------------------------------------------------------
-        |
-        | Sequence resets every year.
-        |
-        | Example:
-        | 2026 -> 001, 002, 003, ...
-        | 2027 -> 001, 002, 003, ...
-        |
-        | Month represents the month when the SPD is created.
-        |
         */
 
         $documentYear = now()->year;
@@ -182,7 +175,7 @@ class SpdController extends Controller
 
         try {
 
-            DB::transaction(function () use (
+            $createdSpd = DB::transaction(function () use (
                 $validated,
                 $documentYear
             ) {
@@ -361,7 +354,7 @@ class SpdController extends Controller
                 |--------------------------------------------------------------------------
                 */
 
-                Spd::create([
+                $spd = Spd::create([
                     'spd_number' => $spdNumber,
 
                     'document_year' => $documentYear,
@@ -420,6 +413,8 @@ class SpdController extends Controller
                 $employee->spd_limit = $employee->spd_limit - 1;
 
                 $employee->save();
+
+                return $spd;
             });
 
         } finally {
@@ -436,6 +431,36 @@ class SpdController extends Controller
             );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Notify Assigned Manager
+        |--------------------------------------------------------------------------
+        */
+
+        $createdSpd->loadMissing([
+            'manager.user',
+            'employee',
+            'project',
+            'creator',
+        ]);
+
+        $managerUser = $createdSpd->manager?->user;
+
+        if ($managerUser) {
+            try {
+                $managerUser->notify(
+                    new \App\Notifications\SpdApprovalResultNotification(
+                        $createdSpd,
+                        'approved',
+                        'manager',
+                        'request'
+                    )
+                );
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         return redirect()
             ->route('spds.index')
             ->with(
@@ -443,7 +468,7 @@ class SpdController extends Controller
                 'SPD berhasil dibuat dan menunggu approval Manager.'
             );
     }
-   /**
+  /**
      * Display the specified SPD.
      */
     public function show(Spd $spd)

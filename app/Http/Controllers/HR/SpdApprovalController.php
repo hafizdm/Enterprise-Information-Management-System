@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\Spd;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\SpdApprovalResultNotification;
 
 class SpdApprovalController extends Controller
 {
@@ -121,9 +122,70 @@ class SpdApprovalController extends Controller
         );
     }
 
+    
+    /**
+     * Display SPD confirmation page opened from an approval email.
+     */
+    public function emailConfirm(Spd $spd, string $stage)
+    {
+        abort_unless(
+            auth()->user()->can('spd.approve'),
+            403,
+            'You are not authorized to approve SPD requests.'
+        );
+
+        abort_unless(
+            in_array($stage, ['manager', 'cost_control'], true),
+            404,
+            'Invalid SPD approval stage.'
+        );
+
+        $employee = auth()->user()->employee;
+
+        abort_unless(
+            $employee,
+            403,
+            'Your user account is not linked to an employee.'
+        );
+
+        if ($stage === 'manager') {
+            abort_unless(
+                $spd->manager_id === $employee->id
+                && $spd->status === 'pending_manager',
+                403,
+                'This SPD is not awaiting your Manager approval.'
+            );
+        }
+
+        if ($stage === 'cost_control') {
+            abort_unless(
+                $spd->approval_document_id === $employee->id
+                && $spd->status === 'pending_document',
+                403,
+                'This SPD is not awaiting your Cost Control approval.'
+            );
+        }
+
+        $spd->load([
+            'employee.division',
+            'employee.position',
+            'employee.costLevel',
+            'project',
+            'manager',
+            'approvalDocument',
+            'creator.employee',
+        ]);
+
+        return view(
+            'hr.spds.approvals.email-confirm',
+            compact('spd', 'stage')
+        );
+    }
+
     /**
      * Approve an SPD request.
      */
+   
     public function approve(Spd $spd)
     {
         abort_unless(
@@ -170,6 +232,32 @@ class SpdApprovalController extends Controller
 
             $spd->save();
 
+            /*
+            |--------------------------------------------------------------------------
+            | Notify Cost Control
+            |--------------------------------------------------------------------------
+            |
+            | Send the approval request after the SPD status is saved.
+            |
+            */
+
+            $spd->loadMissing([
+                'approvalDocument.user',
+            ]);
+
+            $costControlUser = $spd->approvalDocument?->user;
+
+            if ($costControlUser) {
+                $costControlUser->notify(
+                    new SpdApprovalResultNotification(
+                        $spd,
+                        'approved',
+                        'cost_control',
+                        'request'
+                    )
+                );
+            }
+
             return redirect()
                 ->route('spd.approvals.index')
                 ->with(
@@ -198,6 +286,47 @@ class SpdApprovalController extends Controller
 
             $spd->save();
 
+            /*
+            |--------------------------------------------------------------------------
+            | Notify HR and Employee
+            |--------------------------------------------------------------------------
+            |
+            | Send the final approval result to the SPD creator and the employee
+            | who will travel. Avoid duplicate notification to the same account.
+            |
+            */
+
+            $spd->loadMissing([
+                'creator',
+                'employee.user',
+            ]);
+
+            $hrUser = $spd->creator;
+            $employeeUser = $spd->employee?->user;
+
+            if ($hrUser) {
+                $hrUser->notify(
+                    new SpdApprovalResultNotification(
+                        $spd,
+                        'approved',
+                        'cost_control'
+                    )
+                );
+            }
+
+            if (
+                $employeeUser
+                && (!$hrUser || $employeeUser->id !== $hrUser->id)
+            ) {
+                $employeeUser->notify(
+                    new SpdApprovalResultNotification(
+                        $spd,
+                        'approved',
+                        'cost_control'
+                    )
+                );
+            }
+
             return redirect()
                 ->route('spd.approvals.index')
                 ->with(
@@ -215,6 +344,7 @@ class SpdApprovalController extends Controller
     /**
      * Reject an SPD request.
      */
+
     public function reject(Request $request, Spd $spd)
     {
         abort_unless(
@@ -276,6 +406,26 @@ class SpdApprovalController extends Controller
                 $employee->save();
             });
 
+            /*
+            |--------------------------------------------------------------------------
+            | Notify HR after Manager Rejection
+            |--------------------------------------------------------------------------
+            */
+
+            $spd->loadMissing('creator');
+
+            $hrUser = $spd->creator;
+
+            if ($hrUser) {
+                $hrUser->notify(
+                    new SpdApprovalResultNotification(
+                        $spd,
+                        'rejected',
+                        'manager'
+                    )
+                );
+            }
+
             return redirect()
                 ->route('spd.approvals.index')
                 ->with(
@@ -315,6 +465,26 @@ class SpdApprovalController extends Controller
                 $employee->save();
             });
 
+            /*
+            |--------------------------------------------------------------------------
+            | Notify HR after Cost Control Rejection
+            |--------------------------------------------------------------------------
+            */
+
+            $spd->loadMissing('creator');
+
+            $hrUser = $spd->creator;
+
+            if ($hrUser) {
+                $hrUser->notify(
+                    new SpdApprovalResultNotification(
+                        $spd,
+                        'rejected',
+                        'cost_control'
+                    )
+                );
+            }
+
             return redirect()
                 ->route('spd.approvals.index')
                 ->with(
@@ -328,4 +498,5 @@ class SpdApprovalController extends Controller
             'This SPD is not waiting for your approval.'
         );
     }
+
 }
