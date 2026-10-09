@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\SpdReportNotification;
 
 class SpdReportController extends Controller
 {
@@ -116,6 +117,8 @@ class SpdReportController extends Controller
     /**
      * Store a new SPD report or resubmit a rejected report.
      */
+
+
     public function store(Request $request)
     {
         abort_unless(
@@ -136,11 +139,6 @@ class SpdReportController extends Controller
         |--------------------------------------------------------------------------
         | Validate Employee Input
         |--------------------------------------------------------------------------
-        |
-        | Meals per Day and Allowance per Day are intentionally NOT validated
-        | from the request because their values must come from the employee's
-        | Cost Level on the server.
-        |
         */
 
         $validated = $request->validate([
@@ -190,11 +188,6 @@ class SpdReportController extends Controller
         |--------------------------------------------------------------------------
         | Load Approved SPD
         |--------------------------------------------------------------------------
-        |
-        | Security:
-        | - SPD must belong to authenticated employee.
-        | - SPD must be fully approved.
-        |
         */
 
         $spd = Spd::with([
@@ -219,20 +212,11 @@ class SpdReportController extends Controller
         |--------------------------------------------------------------------------
         | Determine Existing Report
         |--------------------------------------------------------------------------
-        |
-        | If a report exists:
-        |
-        | - rejected  = allowed to resubmit
-        | - submitted = not allowed
-        | - approved  = not allowed
-        | - settled   = not allowed
-        |
         */
 
         $existingReport = $spd->report;
 
         if ($existingReport) {
-
             abort_unless(
                 $existingReport->status_report === 'rejected',
                 422,
@@ -264,10 +248,6 @@ class SpdReportController extends Controller
         |--------------------------------------------------------------------------
         | Determine Meals & Allowance Rate
         |--------------------------------------------------------------------------
-        |
-        | The rate is taken from the employee's Cost Level and the approved
-        | SPD travel type.
-        |
         */
 
         $travelType = strtolower(
@@ -275,23 +255,12 @@ class SpdReportController extends Controller
         );
 
         if ($travelType === 'domestic') {
-
-            $mealsPerDay =
-                (float) $costLevel->meals_domestic;
-
-            $allowancePerDay =
-                (float) $costLevel->allowance_domestic;
-
+            $mealsPerDay = (float) $costLevel->meals_domestic;
+            $allowancePerDay = (float) $costLevel->allowance_domestic;
         } elseif ($travelType === 'international') {
-
-            $mealsPerDay =
-                (float) $costLevel->meals_international;
-
-            $allowancePerDay =
-                (float) $costLevel->allowance_international;
-
+            $mealsPerDay = (float) $costLevel->meals_international;
+            $allowancePerDay = (float) $costLevel->allowance_international;
         } else {
-
             abort(
                 422,
                 'The SPD travel type is invalid.'
@@ -312,8 +281,7 @@ class SpdReportController extends Controller
             $validated['date_return']
         );
 
-        $totalDays =
-            $dateDeparture->diffInDays($dateReturn) + 1;
+        $totalDays = $dateDeparture->diffInDays($dateReturn) + 1;
 
         /*
         |--------------------------------------------------------------------------
@@ -321,11 +289,8 @@ class SpdReportController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $localTransport =
-            (float) ($validated['local_transport'] ?? 0);
-
-        $contingencies =
-            (float) ($validated['contingencies'] ?? 0);
+        $localTransport = (float) ($validated['local_transport'] ?? 0);
+        $contingencies = (float) ($validated['contingencies'] ?? 0);
 
         /*
         |--------------------------------------------------------------------------
@@ -333,11 +298,8 @@ class SpdReportController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $mealsTotal =
-            $mealsPerDay * $totalDays;
-
-        $allowanceTotal =
-            $allowancePerDay * $totalDays;
+        $mealsTotal = $mealsPerDay * $totalDays;
+        $allowanceTotal = $allowancePerDay * $totalDays;
 
         /*
         |--------------------------------------------------------------------------
@@ -357,33 +319,21 @@ class SpdReportController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $balanceReceived =
-            (float) $spd->balance_received;
+        $balanceReceived = (float) $spd->balance_received;
 
         /*
         |--------------------------------------------------------------------------
         | Calculate Settlement Result
         |--------------------------------------------------------------------------
-        |
-        | Negative = Company owes employee
-        | Zero     = Cash clear
-        | Positive = Employee returns money
-        |
         */
 
-        $expenseReportTotal =
-            $balanceReceived - $expenseBalance;
+        $expenseReportTotal = $balanceReceived - $expenseBalance;
 
         if ($expenseReportTotal < 0) {
-
             $settlementStatus = 'reimburse';
-
         } elseif ($expenseReportTotal > 0) {
-
             $settlementStatus = 'refund_employee';
-
         } else {
-
             $settlementStatus = 'cash_clear';
         }
 
@@ -396,7 +346,6 @@ class SpdReportController extends Controller
         $evidencePath = null;
 
         if ($request->hasFile('expense_evidence')) {
-
             $evidencePath = $request->file('expense_evidence')
                 ->store(
                     'spd-reports/evidence',
@@ -410,7 +359,11 @@ class SpdReportController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        // Keep the saved report available for notification after the transaction.
+        $submittedReport = null;
+
         DB::transaction(function () use (
+            &$submittedReport,
             $spd,
             $employee,
             $existingReport,
@@ -426,7 +379,6 @@ class SpdReportController extends Controller
             $settlementStatus,
             $evidencePath
         ) {
-
             /*
             |--------------------------------------------------------------------------
             | New SPD Report
@@ -434,76 +386,30 @@ class SpdReportController extends Controller
             */
 
             if (!$existingReport) {
+                $submittedReport = SpdReport::create([
+                    'spd_id' => $spd->id,
+                    'employee_id' => $employee->id,
 
-                SpdReport::create([
-                    'spd_id' =>
-                        $spd->id,
+                    'date_departure' => $validated['date_departure'],
+                    'date_return' => $validated['date_return'],
+                    'total_days' => $totalDays,
 
-                    'employee_id' =>
-                        $employee->id,
+                    'meals_per_day' => $mealsPerDay,
+                    'allowance_per_day' => $allowancePerDay,
+                    'local_transport' => $localTransport,
+                    'contingencies' => $contingencies,
 
-                    /*
-                    | Actual Travel
-                    */
-                    'date_departure' =>
-                        $validated['date_departure'],
+                    'balance_received' => $balanceReceived,
+                    'expense_balance' => $expenseBalance,
+                    'expense_report_total' => $expenseReportTotal,
 
-                    'date_return' =>
-                        $validated['date_return'],
+                    'status_report' => 'submitted',
+                    'settlement_status' => $settlementStatus,
 
-                    'total_days' =>
-                        $totalDays,
+                    'expense_evidence' => $evidencePath,
+                    'note' => $validated['note'] ?? null,
 
-                    /*
-                    | Actual Expenses
-                    */
-                    'meals_per_day' =>
-                        $mealsPerDay,
-
-                    'allowance_per_day' =>
-                        $allowancePerDay,
-
-                    'local_transport' =>
-                        $localTransport,
-
-                    'contingencies' =>
-                        $contingencies,
-
-                    /*
-                    | Financial Calculation
-                    */
-                    'balance_received' =>
-                        $balanceReceived,
-
-                    'expense_balance' =>
-                        $expenseBalance,
-
-                    'expense_report_total' =>
-                        $expenseReportTotal,
-
-                    /*
-                    | Report Workflow
-                    */
-                    'status_report' =>
-                        'submitted',
-
-                    'settlement_status' =>
-                        $settlementStatus,
-
-                    /*
-                    | Evidence
-                    */
-                    'expense_evidence' =>
-                        $evidencePath,
-
-                    'note' =>
-                        $validated['note'] ?? null,
-
-                    /*
-                    | Submission
-                    */
-                    'submitted_at' =>
-                        now(),
+                    'submitted_at' => now(),
                 ]);
 
                 return;
@@ -513,100 +419,84 @@ class SpdReportController extends Controller
             |--------------------------------------------------------------------------
             | Resubmit Existing Rejected Report
             |--------------------------------------------------------------------------
-            |
-            | IMPORTANT:
-            | We update the existing report.
-            |
-            | The SPD number and spd_id remain exactly the same.
-            |
             */
 
-            $oldEvidencePath =
-                $existingReport->expense_evidence;
+            $oldEvidencePath = $existingReport->expense_evidence;
 
             $existingReport->update([
-                'date_departure' =>
-                    $validated['date_departure'],
+                'date_departure' => $validated['date_departure'],
+                'date_return' => $validated['date_return'],
+                'total_days' => $totalDays,
 
-                'date_return' =>
-                    $validated['date_return'],
+                'meals_per_day' => $mealsPerDay,
+                'allowance_per_day' => $allowancePerDay,
+                'local_transport' => $localTransport,
+                'contingencies' => $contingencies,
 
-                'total_days' =>
-                    $totalDays,
+                'balance_received' => $balanceReceived,
+                'expense_balance' => $expenseBalance,
+                'expense_report_total' => $expenseReportTotal,
 
-                'meals_per_day' =>
-                    $mealsPerDay,
+                'status_report' => 'submitted',
+                'settlement_status' => $settlementStatus,
 
-                'allowance_per_day' =>
-                    $allowancePerDay,
+                'expense_evidence' => $evidencePath,
+                'note' => $validated['note'] ?? null,
 
-                'local_transport' =>
-                    $localTransport,
+                'manager_approved_at' => null,
+                'manager_rejection_reason' => null,
 
-                'contingencies' =>
-                    $contingencies,
-
-                'balance_received' =>
-                    $balanceReceived,
-
-                'expense_balance' =>
-                    $expenseBalance,
-
-                'expense_report_total' =>
-                    $expenseReportTotal,
-
-                /*
-                | Rejected → Submitted
-                */
-                'status_report' =>
-                    'submitted',
-
-                'settlement_status' =>
-                    $settlementStatus,
-
-                /*
-                | New evidence
-                */
-                'expense_evidence' =>
-                    $evidencePath,
-
-                'note' =>
-                    $validated['note'] ?? null,
-
-                /*
-                | Reset Manager Decision
-                */
-                'manager_approved_at' =>
-                    null,
-
-                'manager_rejection_reason' =>
-                    null,
-
-                /*
-                | New submission time
-                */
-                'submitted_at' =>
-                    now(),
+                'submitted_at' => now(),
             ]);
+
+            // Reuse the existing report for the notification.
+            $submittedReport = $existingReport;
 
             /*
             |--------------------------------------------------------------------------
             | Delete Previous Evidence
             |--------------------------------------------------------------------------
-            |
-            | The old evidence is no longer needed after the employee
-            | uploads the corrected evidence.
-            |
             */
 
             if (
                 $oldEvidencePath &&
                 $oldEvidencePath !== $evidencePath
             ) {
-                Storage::disk('public')
-                    ->delete($oldEvidencePath);
+                Storage::disk('public')->delete($oldEvidencePath);
             }
         });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Notify Manager After Successful Submission
+        |--------------------------------------------------------------------------
+        */
+
+        if ($submittedReport) {
+            $submittedReport->loadMissing([
+                'employee',
+                'spd.manager.user',
+                'spd.project',
+            ]);
+
+            // Use the Manager assigned to this SPD.
+            $managerUser = $submittedReport->spd?->manager?->user;
+
+            if ($managerUser) {
+                $managerUser->notify(
+                    new SpdReportNotification(
+                        $submittedReport,
+                        'request'
+                    )
+                );
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Redirect After Submission
+        |--------------------------------------------------------------------------
+        */
 
         return redirect()
             ->route('spd-reports.index')
@@ -617,7 +507,6 @@ class SpdReportController extends Controller
                     : 'SPD Report berhasil dibuat dan disubmit untuk approval Manager.'
             );
     }
-
     /**
      * Display an SPD report.
      */

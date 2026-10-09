@@ -562,7 +562,8 @@ class SpdController extends Controller
         /**
          * Delete an SPD request.
          */
-    public function destroy(Spd $spd)
+    
+        public function destroy(Spd $spd)
     {
         abort_unless(
             auth()->user()->can('spd.delete'),

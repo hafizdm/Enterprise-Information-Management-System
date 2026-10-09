@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\SpdReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\SpdReportNotification;
 
 class SpdReportApprovalController extends Controller
 {
@@ -89,6 +90,57 @@ class SpdReportApprovalController extends Controller
     }
 
     /**
+ * Display SPD Report confirmation page from email.
+ */
+
+/**
+ * Display SPD Report confirmation page from email.
+ */
+    public function emailConfirm(SpdReport $spdReport)
+    {
+        abort_unless(
+            auth()->user()->can('spd-report.view-approval'),
+            403,
+            'You are not authorized to view SPD Report approvals.'
+        );
+
+        $manager = auth()->user()->employee;
+
+        abort_unless(
+            $manager,
+            403,
+            'Your user account is not linked to an employee.'
+        );
+
+        abort_unless(
+            $spdReport->employee &&
+            $spdReport->employee->report_to === $manager->id,
+            403,
+            'You are not authorized to review this SPD report.'
+        );
+
+        $spdReport->load([
+            'spd.project',
+            'spd.manager',
+            'spd.approvalDocument',
+            'spd.creator',
+            'employee.costLevel',
+            'employee',
+        ]);
+
+        if ($spdReport->status_report !== 'submitted') {
+            return view(
+                'hr.spd-reports.approval.already-processed',
+                compact('spdReport')
+            );
+        }
+
+        return view(
+            'hr.spd-reports.approval.email-confirm',
+            compact('spdReport')
+        );
+    }
+   /**
      * Approve an SPD report.
      *
      * When approved:
@@ -96,6 +148,8 @@ class SpdReportApprovalController extends Controller
      * - Manager approval timestamp is recorded.
      * - Employee SPD Limit is increased by 1.
      */
+
+    
     public function approve(SpdReport $spdReport)
     {
         abort_unless(
@@ -113,19 +167,18 @@ class SpdReportApprovalController extends Controller
         );
 
         DB::transaction(function () use ($spdReport, $manager) {
-
             /*
-             * Lock the report so the same report cannot be
-             * approved twice at the same time.
-             */
+            * Lock the report so the same report cannot be
+            * approved twice at the same time.
+            */
             $report = SpdReport::with('employee')
                 ->lockForUpdate()
                 ->findOrFail($spdReport->id);
 
             /*
-             * Make sure this Manager is actually the
-             * employee's direct manager.
-             */
+            * Make sure this Manager is actually the
+            * employee's direct manager.
+            */
             abort_unless(
                 $report->employee &&
                 $report->employee->report_to === $manager->id,
@@ -134,8 +187,8 @@ class SpdReportApprovalController extends Controller
             );
 
             /*
-             * Only submitted reports can be approved.
-             */
+            * Only submitted reports can be approved.
+            */
             abort_unless(
                 $report->status_report === 'submitted',
                 422,
@@ -143,31 +196,52 @@ class SpdReportApprovalController extends Controller
             );
 
             /*
-             * Lock the employee record before changing
-             * the SPD Limit.
-             */
+            * Lock the employee record before changing
+            * the SPD Limit.
+            */
             $employee = Employee::lockForUpdate()
                 ->findOrFail($report->employee_id);
 
             /*
-             * Return 1 SPD Limit to the employee.
-             *
-             * Example:
-             * 1 → 2
-             * 2 → 3
-             * 3 → 4
-             */
+            * Return one SPD Limit to the employee.
+            */
             $employee->increment('spd_limit', 1);
 
             /*
-             * Mark the SPD Report as approved.
-             */
+            * Mark the SPD Report as approved.
+            */
             $report->update([
                 'status_report' => 'approved',
                 'manager_approved_at' => now(),
                 'manager_rejection_reason' => null,
             ]);
         });
+
+        /*
+        * Notify Employee and HR after successful approval.
+        */
+        $spdReport->refresh()->loadMissing([
+            'employee.user',
+            'spd.creator',
+        ]);
+
+        $employeeUser = $spdReport->employee?->user;
+        $hrUser = $spdReport->spd?->creator;
+
+        if ($employeeUser) {
+            $employeeUser->notify(
+                new SpdReportNotification($spdReport, 'result')
+            );
+        }
+
+        if (
+            $hrUser &&
+            (!$employeeUser || $hrUser->id !== $employeeUser->id)
+        ) {
+            $hrUser->notify(
+                new SpdReportNotification($spdReport, 'result')
+            );
+        }
 
         return redirect()
             ->route('spd-report-approvals.index')
@@ -177,15 +251,8 @@ class SpdReportApprovalController extends Controller
             );
     }
 
-    /**
-     * Reject an SPD report.
-     *
-     * Rejecting does NOT change the employee SPD Limit.
-     */
-    public function reject(
-        Request $request,
-        SpdReport $spdReport
-    ) {
+    public function reject(Request $request,SpdReport $spdReport) 
+    {
         abort_unless(
             auth()->user()->can('spd-report.reject'),
             403,
@@ -234,6 +301,22 @@ class SpdReportApprovalController extends Controller
             ]);
         });
 
+        /*
+        * Send rejection notification to Employee only.
+        * Do not notify HR when the report is rejected.
+        */
+        $spdReport->refresh()->loadMissing([
+            'employee.user',
+        ]);
+
+        $employeeUser = $spdReport->employee?->user;
+
+        if ($employeeUser) {
+            $employeeUser->notify(
+                new SpdReportNotification($spdReport, 'result')
+            );
+        }
+
         return redirect()
             ->route('spd-report-approvals.index')
             ->with(
@@ -241,4 +324,6 @@ class SpdReportApprovalController extends Controller
                 'SPD Report berhasil ditolak dan dikembalikan kepada Employee.'
             );
     }
+
+  
 }

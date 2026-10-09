@@ -39,11 +39,17 @@ class SpdApprovalResultNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+
         $this->spd->loadMissing([
-            'employee',
+            'employee.division',
+            'employee.position',
+            'employee.project',
             'project',
-            'creator',
+            'manager.position',
+            'approvalDocument.position',
+            'creator.employee',
         ]);
+
 
         $stageLabel = $this->approvalStage === 'cost_control'
             ? 'Cost Control'
@@ -100,6 +106,12 @@ class SpdApprovalResultNotification extends Notification implements ShouldQueue
             'returnDate' => $this->spd->date_return?->format('d-m-Y') ?? '-',
         ])->render();
 
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'hr.spds.pdf',
+            ['spd' => $this->spd]
+        );
+
         return (new MailMessage)
             ->subject($subject)
             ->view('emails.spd-approval', [
@@ -112,7 +124,13 @@ class SpdApprovalResultNotification extends Notification implements ShouldQueue
                 'rejectionReason' => $rejectionReason,
                 'departureDate' => $this->spd->date_departure?->format('d-m-Y') ?? '-',
                 'returnDate' => $this->spd->date_return?->format('d-m-Y') ?? '-',
-            ]);
+        ])
+        ->attachData(
+            $pdf->output(),
+            'spd-' . $this->spd->id . '.pdf',
+            ['mime' => 'application/pdf']
+        );
+
     }
     
     public function toArray(object $notifiable): array

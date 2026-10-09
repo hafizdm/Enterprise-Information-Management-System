@@ -105,6 +105,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/spd-report-approvals/{spdReport}/reject', [SpdReportApprovalController::class, 'reject'])
             ->name('spd-report-approvals.reject');
 
+        
+        // SPD Report Approval Email Confirmation
+        Route::get(
+            '/spd-report-approvals/{spdReport}/email-confirm',
+            [SpdReportApprovalController::class, 'emailConfirm']
+        )
+            ->middleware('signed')
+            ->name('spd-report-approvals.email-confirm');
+
+
     });
 
     Route::get('/leave-approvals/{leaveRequest}/email-approve',[LeaveRequestController::class, 'managerApproveFromEmail'])
