@@ -4,7 +4,7 @@
 
 <head>
 
-
+<link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 <meta charset="UTF-8">
 
 <meta
