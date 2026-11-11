@@ -84,6 +84,17 @@ class RolePermissionSeeder extends Seeder
             // Reports
             'report.view',
             'report.export',
+
+            // Travel Management (Booking Phase)
+            'travel.view-queue',
+            'travel.site-request',
+            'travel.select-quotation',
+            'travel.manage',
+            'travel.vendor-manage',
+            'travel.inquiry',
+            'travel.review-quotation',
+            'travel.final-booking',
+            'travel.verify-ticket',
         ];
 
         foreach ($permissions as $permission) {
@@ -107,6 +118,7 @@ class RolePermissionSeeder extends Seeder
             'HRD',
             'Document Control',
             'Board of Director',
+            'HR/GA Site',
         ];
 
         foreach ($roles as $role) {
@@ -122,8 +134,21 @@ class RolePermissionSeeder extends Seeder
         |--------------------------------------------------------------------------
         */
 
+        // Travel permissions are reserved for HRD and HR/GA Site, NOT System Administrator
+        $travelOperationalPermissions = [
+            'travel.view-queue',
+            'travel.site-request',
+            'travel.select-quotation',
+            'travel.manage',
+            'travel.vendor-manage',
+            'travel.inquiry',
+            'travel.review-quotation',
+            'travel.final-booking',
+            'travel.verify-ticket',
+        ];
+
         $rolePermissions = [
-            'System Administrator' => $permissions,
+            'System Administrator' => array_values(array_diff($permissions, $travelOperationalPermissions)),
 
             'Employee' => [
                 'dashboard.view',
@@ -201,6 +226,16 @@ class RolePermissionSeeder extends Seeder
 
                 'report.view',
                 'report.export',
+
+                'travel.view-queue',
+                'travel.manage',
+                'travel.vendor-manage',
+                'travel.inquiry',
+                'travel.review-quotation',
+                'travel.final-booking',
+                'travel.verify-ticket',
+                'travel.site-request',
+                'travel.select-quotation',
             ],
 
             'Document Control' => [
@@ -223,7 +258,23 @@ class RolePermissionSeeder extends Seeder
                 'report.view',
                 'report.export',
             ],
+
+            'HR/GA Site' => [
+                'dashboard.view',
+                'spd.view-own',
+                'travel.view-queue',
+                'travel.site-request',
+                'travel.select-quotation',
+            ],
         ];
+
+        // Ensure deprecated Travel Vendor role and permissions are removed
+        Role::where('name', 'Travel Vendor')->delete();
+        Permission::whereIn('name', [
+            'travel.vendor-portal',
+            'travel.vendor-quotation-submit',
+            'travel.vendor-ticket-upload',
+        ])->delete();
 
         foreach ($rolePermissions as $roleName => $permissionNames) {
             $role = Role::where('name', $roleName)

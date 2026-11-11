@@ -11,8 +11,11 @@ class User extends Authenticatable
     use HasRoles, Notifiable;
 
     protected $fillable = [
+        'user_type',
         'employee_id',
+        'vendor_id',
         'username',
+        'email',
         'password',
         'must_change_password',
         'is_active',
@@ -37,8 +40,23 @@ class User extends Authenticatable
         return $this->belongsTo(Employee::class);
     }
 
+    public function vendor()
+    {
+        return $this->belongsTo(\App\Models\Travel\Vendor::class);
+    }
+
+    public function isVendor(): bool
+    {
+        return $this->user_type === 'vendor' || $this->vendor_id !== null;
+    }
+
+    public function isInternal(): bool
+    {
+        return $this->user_type === 'internal' && $this->vendor_id === null;
+    }
+
     public function routeNotificationForMail($notification)
     {
-        return $this->employee?->email;
+        return $this->employee?->email ?? $this->email ?? $this->vendor?->email;
     }
 }

@@ -801,6 +801,58 @@
 
 
 <!-- ===================================================== -->
+<!-- TRAVEL MANAGEMENT -->
+<!-- ===================================================== -->
+
+@if(
+    auth()->user()->hasRole('HRD') ||
+    auth()->user()->hasRole('HR/GA Site') ||
+    auth()->user()->can('travel.view-queue') ||
+    auth()->user()->can('travel.site-request')
+)
+
+    <div class="sidebar-section">
+        Travel Management
+    </div>
+
+    <nav class="nav flex-column">
+
+        <!-- Antrean Travel -->
+        <a
+            href="{{ route('travel.requests.index') }}"
+            class="nav-link {{ request()->is('travel/requests*') ? 'active' : '' }}"
+        >
+            <i class="bi bi-airplane"></i>
+            Antrean Travel
+        </a>
+
+        <!-- Confirmed Bookings (HRD only) -->
+        @if(auth()->user()->hasRole('HRD') || auth()->user()->can('travel.final-booking') || auth()->user()->can('travel.manage'))
+            <a
+                href="{{ route('travel.bookings.index') }}"
+                class="nav-link {{ request()->is('travel/bookings*') ? 'active' : '' }}"
+            >
+                <i class="bi bi-journal-check"></i>
+                Booking & Tiket
+            </a>
+        @endif
+
+        <!-- Vendor Travel (HRD only) -->
+        @if(auth()->user()->hasRole('HRD') || auth()->user()->can('travel.vendor-manage'))
+            <a
+                href="{{ route('travel.vendors.index') }}"
+                class="nav-link {{ request()->is('travel/vendors*') ? 'active' : '' }}"
+            >
+                <i class="bi bi-building"></i>
+                Vendor Travel
+            </a>
+        @endif
+
+    </nav>
+
+@endif
+
+<!-- ===================================================== -->
 <!-- HR -->
 <!-- ===================================================== -->
 

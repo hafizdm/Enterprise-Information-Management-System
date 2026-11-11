@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\HR\EmployeeController;
+use App\Http\Controllers\HR\EmployeeBusinessCardController;
 use App\Http\Controllers\Master\DivisionController;
 use App\Http\Controllers\Master\PositionController;
 use App\Http\Controllers\Master\ProjectController;
@@ -27,6 +28,19 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/login', [AuthController::class, 'login'])
         ->name('login.submit');
+});
+
+
+// =========================
+// Public Digital Business Card (Guest / QR Scan)
+// =========================
+
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/c/{token}', [\App\Http\Controllers\Public\PublicBusinessCardController::class, 'show'])
+        ->name('public.business-card.show');
+
+    Route::get('/c/{token}/vcf', [\App\Http\Controllers\Public\PublicBusinessCardController::class, 'downloadVcf'])
+        ->name('public.business-card.vcf');
 });
 
 
@@ -168,6 +182,14 @@ Route::middleware('role:System Administrator')->group(function () {
 // HR
     Route::resource('employees', EmployeeController::class);
 
+    // Digital Business Card (Internal)
+    Route::prefix('employees/{employee}/business-card')->name('employees.business-card.')->group(function () {
+        Route::get('/', [EmployeeBusinessCardController::class, 'show'])->name('show');
+        Route::put('/', [EmployeeBusinessCardController::class, 'update'])->name('update');
+        Route::get('/qr', [EmployeeBusinessCardController::class, 'downloadQr'])->name('qr');
+        Route::get('/pdf', [EmployeeBusinessCardController::class, 'downloadPdf'])->name('pdf');
+    });
+
     Route::get('/leave-requests',[LeaveRequestController::class, 'index'])
     ->name('leave-requests.index');
 
@@ -237,6 +259,53 @@ Route::middleware('role:System Administrator')->group(function () {
         '/leave-approval-settings',
         [LeaveApprovalSettingController::class, 'update']
         )->name('leave-approval-settings.update');
+
+    // Travel Management - Master Vendors & Requests
+    Route::prefix('travel')->name('travel.')->group(function () {
+        // Central Travel Requests & Project Travel Requests
+        Route::get('requests', [\App\Http\Controllers\Travel\TravelRequestController::class, 'index'])
+            ->name('requests.index');
+        Route::get('requests/create', [\App\Http\Controllers\Travel\TravelRequestController::class, 'create'])
+            ->name('requests.create');
+        Route::post('requests', [\App\Http\Controllers\Travel\TravelRequestController::class, 'store'])
+            ->name('requests.store');
+        Route::get('requests/{travelRequest}', [\App\Http\Controllers\Travel\TravelRequestController::class, 'show'])
+            ->name('requests.show');
+        Route::post('requests/{travelRequest}/cancel', [\App\Http\Controllers\Travel\TravelRequestController::class, 'cancel'])
+            ->name('requests.cancel');
+
+        // Inquiries & Quotations (Internal HR/GA HO & Site)
+        Route::get('inquiries/create', [\App\Http\Controllers\Travel\TravelInquiryController::class, 'create'])
+            ->name('inquiries.create');
+        Route::post('inquiries', [\App\Http\Controllers\Travel\TravelInquiryController::class, 'store'])
+            ->name('inquiries.store');
+        Route::get('inquiries/{inquiry}', [\App\Http\Controllers\Travel\TravelInquiryController::class, 'show'])
+            ->name('inquiries.show');
+        Route::get('inquiries/{inquiry}/quotations/create', [\App\Http\Controllers\Travel\VendorQuotationController::class, 'create'])
+            ->name('quotations.create');
+        Route::post('inquiries/{inquiry}/quotations', [\App\Http\Controllers\Travel\VendorQuotationController::class, 'store'])
+            ->name('quotations.store');
+        Route::get('inquiries/{inquiry}/quotations/review', [\App\Http\Controllers\Travel\VendorQuotationController::class, 'review'])
+            ->name('quotations.review');
+        Route::post('quotations/{package}/select', [\App\Http\Controllers\Travel\VendorQuotationController::class, 'select'])
+            ->name('quotations.select');
+
+        // Confirmed Bookings & Tickets (Internal HR/GA HO)
+        Route::get('bookings', [\App\Http\Controllers\Travel\TravelBookingController::class, 'index'])
+            ->name('bookings.index');
+        Route::get('bookings/{booking}', [\App\Http\Controllers\Travel\TravelBookingController::class, 'show'])
+            ->name('bookings.show');
+        Route::post('bookings/{booking}/tickets', [\App\Http\Controllers\Travel\TravelBookingController::class, 'uploadTicket'])
+            ->name('bookings.tickets.store');
+        Route::post('tickets/{ticket}/verify', [\App\Http\Controllers\Travel\TravelBookingController::class, 'verifyTicket'])
+            ->name('tickets.verify');
+        Route::get('tickets/{ticket}/download', [\App\Http\Controllers\Travel\TravelBookingController::class, 'downloadTicket'])
+            ->name('tickets.download');
+
+        Route::resource('vendors', \App\Http\Controllers\Travel\MasterVendorController::class);
+        Route::post('vendors/{vendor}/activate', [\App\Http\Controllers\Travel\MasterVendorController::class, 'activate'])
+            ->name('vendors.activate');
+    });
 });
 
 

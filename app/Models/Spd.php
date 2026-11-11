@@ -111,4 +111,12 @@ class Spd extends Model
     {
         return $this->hasOne(SpdReport::class);
     }
+
+    /**
+     * Travel Request associated with this approved SPD.
+     */
+    public function travelRequest(): HasOne
+    {
+        return $this->hasOne(\App\Models\Travel\TravelRequest::class, 'spd_id');
+    }
 }

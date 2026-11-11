@@ -55,16 +55,18 @@ return new class extends Migration
         |
         */
 
-        DB::statement("
-            ALTER TABLE spd_reports
-            MODIFY status_report ENUM(
-                'draft',
-                'submitted',
-                'approved',
-                'rejected',
-                'settled'
-            ) NOT NULL DEFAULT 'draft'
-        ");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("
+                ALTER TABLE spd_reports
+                MODIFY status_report ENUM(
+                    'draft',
+                    'submitted',
+                    'approved',
+                    'rejected',
+                    'settled'
+                ) NOT NULL DEFAULT 'draft'
+            ");
+        }
     }
 
     public function down(): void
@@ -75,15 +77,17 @@ return new class extends Migration
         |--------------------------------------------------------------------------
         */
 
-        DB::statement("
-            ALTER TABLE spd_reports
-            MODIFY status_report ENUM(
-                'draft',
-                'submitted',
-                'reviewed',
-                'settled'
-            ) NOT NULL DEFAULT 'draft'
-        ");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("
+                ALTER TABLE spd_reports
+                MODIFY status_report ENUM(
+                    'draft',
+                    'submitted',
+                    'reviewed',
+                    'settled'
+                ) NOT NULL DEFAULT 'draft'
+            ");
+        }
 
         Schema::table('spd_reports', function (Blueprint $table) {
             $table->dropIndex([

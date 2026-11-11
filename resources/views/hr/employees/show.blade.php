@@ -34,6 +34,20 @@
                 Back
             </a>
 
+            @can('view', $employee)
+
+                <button
+                    type="button"
+                    class="btn btn-outline-dark"
+                    data-bs-toggle="modal"
+                    data-bs-target="#digitalBusinessCardModal"
+                >
+                    <i class="bi bi-qr-code me-1"></i>
+                    Digital Business Card
+                </button>
+
+            @endcan
+
             @can('update', $employee)
 
                 <a
@@ -49,6 +63,22 @@
         </div>
 
     </div>
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle me-1"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
 
     {{-- =========================================================
@@ -859,6 +889,11 @@
 
     </div>
 
+
+    {{-- =========================================================
+        DIGITAL BUSINESS CARD MODAL
+    ========================================================== --}}
+    @include('hr.employees.partials.business_card_modal')
 
     {{-- =========================================================
         FOOTER SPACING
